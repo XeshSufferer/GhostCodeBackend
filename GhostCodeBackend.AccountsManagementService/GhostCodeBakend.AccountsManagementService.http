@@ -1,0 +1,6 @@
+@GhostCodeBakend.AccountsManagementService_HostAddress = http://localhost:5243
+
+GET {{GhostCodeBakend.AccountsManagementService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

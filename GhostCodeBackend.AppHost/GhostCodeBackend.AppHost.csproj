@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Sdk Name="Aspire.AppHost.Sdk" Version="9.5.1" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>77def4d9-fbdb-450f-ad00-1aecd1869493</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+      
+      
+  </PropertyGroup>
+    
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.5.1" />
+    <PackageReference Include="Aspire.Hosting.Docker" Version="9.5.1-preview.1.25502.11" />
+    <PackageReference Include="Aspire.Hosting.MongoDB" Version="9.5.1" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="9.5.1" />
+    <PackageReference Include="Aspire.Hosting.Yarp" Version="9.5.1-preview.1.25502.11" />
+     
+    <ProjectReference Include="../GhostCodeBackend.AccountsManagementService/GhostCodeBackend.AccountsManagementService.csproj" />
+  </ItemGroup>
+    
+
+  <ItemGroup>
+    <Content Include="..\.dockerignore">
+      <Link>.dockerignore</Link>
+    </Content>
+  </ItemGroup>
+
+</Project>

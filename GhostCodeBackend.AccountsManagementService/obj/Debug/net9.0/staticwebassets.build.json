@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "pqnK3g4YtPbm1OOupPDUJmsBQ9UTrXrwOZSwE6xFbS0=",
+  "Source": "GhostCodeBackend.AccountsManagementService",
+  "BasePath": "_content/GhostCodeBackend.AccountsManagementService",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
