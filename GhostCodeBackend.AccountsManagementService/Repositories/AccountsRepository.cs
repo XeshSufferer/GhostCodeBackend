@@ -1,5 +1,6 @@
 using MongoDB.Driver;
 using GhostCodeBackend.Shared.Models;
+using GhostCodeBakend.AccountsManagementService.Utils;
 using MongoDB.Driver.Linq;
 
 namespace GhostCodeBackend.AccountsManagementService.Repositories;
@@ -9,10 +10,12 @@ public class AccountsRepository : IAccountsRepository
     private readonly IMongoDatabase _db;
 
     private readonly IMongoCollection<User> _users;
+    private readonly IHasher _hasher;
 
-    public AccountsRepository(IMongoDatabase db)
+    public AccountsRepository(IMongoDatabase db, IHasher hasher)
     {
         _db = db;
+        _hasher = hasher;
         db.CreateCollection("accounts");
         _users = db.GetCollection<User>("accounts");
     }
@@ -60,6 +63,24 @@ public class AccountsRepository : IAccountsRepository
         {
             return false;
         }
+    }
+    
+    public async Task<bool> DeleteUserAsync(string userid, CancellationToken ct = default)
+    {
+        try
+        {
+            await _users.DeleteOneAsync(u => u.Id == userid, ct);
+            return true;
+        }
+        catch (MongoException e)
+        {
+            return false;
+        }
+    }
+
+    public async Task<User?> GetByLoginAndPasswordUserAsync(string login, string password, CancellationToken ct = default)
+    {
+        return await _users.AsQueryable().Where(u => u.Login == login && _hasher.Verify(u.PasswordHash, password)).FirstOrDefaultAsync(ct);
     }
 
 
