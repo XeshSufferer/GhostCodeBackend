@@ -83,6 +83,12 @@ public class AccountsRepository : IAccountsRepository
         return await _users.AsQueryable().Where(u => u.Login == login && _hasher.Verify(u.PasswordHash, password)).FirstOrDefaultAsync(ct);
     }
 
+    public async Task<User?> GetUserByRecoveryCodeAndLogin(string recoveryCode, string login,
+        CancellationToken ct = default)
+    {
+        return await _users.AsQueryable().Where(u => u.Login == login && _hasher.Verify(u.RecoveryCodeHash, recoveryCode)).FirstOrDefaultAsync(ct);
+    }
+
 
 
 

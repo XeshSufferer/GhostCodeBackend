@@ -1,6 +1,6 @@
 namespace GhostCodeBakend.AccountsManagementService.Utils;
 
-public class RandomWordGenerator
+public class RandomWordGenerator : IRandomWordGenerator
 {
     private readonly Random _random;
     private readonly string _chars = "1234567890!@#$%^&*()qwertyuiop[]asdfghjkl;zxcvbnm,./QWERTYUIOP{}ASDFGHJKL:ZXCVBNM<>?";

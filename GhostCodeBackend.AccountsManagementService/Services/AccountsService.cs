@@ -1,5 +1,5 @@
 using GhostCodeBackend.AccountsManagementService.Repositories;
-using GhostCodeBackend.Shared.DTO;
+using GhostCodeBackend.Shared.DTO.Requests;
 using GhostCodeBackend.Shared.Models;
 using GhostCodeBakend.AccountsManagementService.Utils;
 
@@ -44,5 +44,17 @@ public class AccountsService : IAccountsService
     public async Task<bool> DeleteAsync(string id, CancellationToken ct = default)
     {
         return await _accounts.DeleteUserAsync(id, ct);
+    }
+
+    public async Task<(bool, string)> PasswordReset(string login, string recoveryCode, string newPassword, CancellationToken ct = default)
+    {
+        User? user = await _accounts.GetUserByRecoveryCodeAndLogin(recoveryCode, login, ct);
+        user.PasswordHash = _hasher.Hash(newPassword);
+        
+        string newRecoveryCode = _randomWordGenerator.GetRandomWord(20);
+        
+        user.RecoveryCodeHash = _hasher.Hash(newRecoveryCode);
+        bool results = await _accounts.UpdateUserAsync(user);
+        return (results, newRecoveryCode);
     }
 }

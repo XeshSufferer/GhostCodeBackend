@@ -1,6 +1,6 @@
-namespace GhostCodeBackend.Shared.DTO;
+namespace GhostCodeBackend.Shared.DTO.Requests;
 
-public class LoginRequestDTO
+public class RegisterRequestDTO
 {
     public string Login { get; set; }
     public string Password { get; set; }

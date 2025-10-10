@@ -11,4 +11,7 @@ public interface IAccountsRepository
     Task<User?> GetByLoginAndPasswordUserAsync(string login, string password, CancellationToken ct = default);
     Task<bool> DeleteUserAsync(string userid, CancellationToken ct = default);
 
+    Task<User?> GetUserByRecoveryCodeAndLogin(string recoveryCode, string login,
+        CancellationToken ct = default);
+
 }
