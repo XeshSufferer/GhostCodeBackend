@@ -42,8 +42,6 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-//app.MapGet("/{word}", (string word) => Results.Ok(word));
-
 app.MapPost("/register", async (RegisterRequestDTO req, IAccountsService accounts) =>
 {
     var result = await accounts.RegisterAsync(req);

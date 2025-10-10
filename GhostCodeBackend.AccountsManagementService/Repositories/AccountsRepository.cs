@@ -16,13 +16,26 @@ public class AccountsRepository : IAccountsRepository
     {
         _db = db;
         _hasher = hasher;
-        db.CreateCollection("accounts");
-        _users = db.GetCollection<User>("accounts");
+        db.CreateCollection("users");
+        
+        var indexKeys =  Builders<User>.IndexKeys.Ascending(u => u.Login);
+        var indexModel = new CreateIndexModel<User>(indexKeys, new CreateIndexOptions{ Unique = true });
+        
+        _users = db.GetCollection<User>("users");
+        
+        _users.Indexes.CreateOne(indexModel);
     }
 
     public async Task<User?> GetByIdUserAsync(string id, CancellationToken ct = default)
     {
-        return await _users.AsQueryable().Where(u => u.Id == id).FirstOrDefaultAsync(ct);
+        try
+        {
+            return await _users.AsQueryable().Where(u => u.Id == id).FirstOrDefaultAsync(ct);
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
     }
 
     public async Task<bool> CreateUserAsync(User user, CancellationToken ct = default)
@@ -32,7 +45,7 @@ public class AccountsRepository : IAccountsRepository
             await _users.InsertOneAsync(user, ct);
             return true;
         }
-        catch (MongoException e)
+        catch (Exception e)
         {
             return false;
         }
@@ -46,7 +59,7 @@ public class AccountsRepository : IAccountsRepository
             await _users.ReplaceOneAsync(u => u.Id == user.Id, user, opts, ct);
             return true;
         }
-        catch (MongoException e)
+        catch (Exception e)
         {
             return false;
         }
@@ -59,7 +72,7 @@ public class AccountsRepository : IAccountsRepository
             await _users.DeleteOneAsync(u => u.Id == user.Id, ct);
             return true;
         }
-        catch (MongoException e)
+        catch (Exception e)
         {
             return false;
         }
@@ -72,7 +85,7 @@ public class AccountsRepository : IAccountsRepository
             await _users.DeleteOneAsync(u => u.Id == userid, ct);
             return true;
         }
-        catch (MongoException e)
+        catch (Exception e)
         {
             return false;
         }
