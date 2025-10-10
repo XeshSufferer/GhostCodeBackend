@@ -1,6 +1,0 @@
-@GhostCodeBackend.Gateway_HostAddress = http://localhost:5137
-
-GET {{GhostCodeBackend.Gateway_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
