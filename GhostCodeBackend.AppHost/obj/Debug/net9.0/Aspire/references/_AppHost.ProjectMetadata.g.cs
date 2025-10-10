@@ -17,5 +17,5 @@ public class GhostCodeBackend_AppHost
     /// <summary>
     /// The path to the Aspire Host project.
     /// </summary>
-    public static string ProjectPath => """/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend.AppHost""";
+    public static string ProjectPath => """/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/GhostCodeBackend.AppHost""";
 }

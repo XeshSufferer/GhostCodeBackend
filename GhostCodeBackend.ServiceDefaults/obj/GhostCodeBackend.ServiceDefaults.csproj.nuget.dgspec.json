@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend.ServiceDefaults/GhostCodeBackend.ServiceDefaults.csproj": {}
+    "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/GhostCodeBackend.ServiceDefaults/GhostCodeBackend.ServiceDefaults.csproj": {}
   },
   "projects": {
-    "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend.ServiceDefaults/GhostCodeBackend.ServiceDefaults.csproj": {
+    "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/GhostCodeBackend.ServiceDefaults/GhostCodeBackend.ServiceDefaults.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend.ServiceDefaults/GhostCodeBackend.ServiceDefaults.csproj",
+        "projectUniqueName": "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/GhostCodeBackend.ServiceDefaults/GhostCodeBackend.ServiceDefaults.csproj",
         "projectName": "GhostCodeBackend.ServiceDefaults",
-        "projectPath": "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend.ServiceDefaults/GhostCodeBackend.ServiceDefaults.csproj",
+        "projectPath": "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/GhostCodeBackend.ServiceDefaults/GhostCodeBackend.ServiceDefaults.csproj",
         "packagesPath": "/home/byxesh/.nuget/packages/",
-        "outputPath": "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend.ServiceDefaults/obj/",
+        "outputPath": "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/GhostCodeBackend.ServiceDefaults/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/byxesh/.nuget/NuGet/NuGet.Config"

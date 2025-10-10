@@ -15,5 +15,5 @@ public class GhostCodeBackend_AccountsManagementService : global::Aspire.Hosting
     /// <summary>
     /// The path to the GhostCodeBackend_AccountsManagementService project.
     /// </summary>
-    public string ProjectPath => """/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend.AccountsManagementService/GhostCodeBackend.AccountsManagementService.csproj""";
+    public string ProjectPath => """/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/GhostCodeBackend.AccountsManagementService/GhostCodeBackend.AccountsManagementService.csproj""";
 }

@@ -3,18 +3,23 @@ using Aspire.Hosting.Yarp.Transforms;
 var builder = DistributedApplication.CreateBuilder(args);
 
 var cache = builder.AddRedis("cache");
-var mongo = builder.AddMongoDB("mongodb", 3363);
+var mongo = builder.AddMongoDB("mongodb", 3363)
+    .AddDatabase("mainMongo", "main");
 
 
 
 var gateway = builder.AddYarp("gateway");
 
 
-builder.AddDockerComposeEnvironment("docker");
-
 var accountsManagementService =
     builder.AddDockerfile("account-management", "..", "GhostCodeBackend.AccountsManagementService/Dockerfile")
-    .WithHttpEndpoint(0000, 8333, "accounts-http");
+        .WithHttpEndpoint(0000, 8333, "accounts-http")
+        .WithEnvironment("ASPNETCORE_HTTP_PORTS", "8333")
+        .WaitFor(mongo)
+        .WaitFor(cache)
+        .WithReference(mongo, "mongodb")
+        .WithReference(cache, "redis");
+
 
 
 

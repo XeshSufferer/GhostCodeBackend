@@ -8,6 +8,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GhostCodeBackend.ServiceDef
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhostCodeBackend.AccountsManagementService", "GhostCodeBackend.AccountsManagementService\GhostCodeBackend.AccountsManagementService.csproj", "{63198BCE-C4CE-4B27-B622-985B25A2C25F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhostCodeBackend.Shared", "GhostCodeBackend.Shared\GhostCodeBackend.Shared.csproj", "{2B94ED44-DD61-4B76-9724-900B625ADCCF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,10 @@ Global
 		{63198BCE-C4CE-4B27-B622-985B25A2C25F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63198BCE-C4CE-4B27-B622-985B25A2C25F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63198BCE-C4CE-4B27-B622-985B25A2C25F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B94ED44-DD61-4B76-9724-900B625ADCCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B94ED44-DD61-4B76-9724-900B625ADCCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B94ED44-DD61-4B76-9724-900B625ADCCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B94ED44-DD61-4B76-9724-900B625ADCCF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

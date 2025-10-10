@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Dr0WmH929Ro=",
+  "dgSpecHash": "tzAOt3GRhy4=",
   "success": true,
-  "projectFilePath": "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend.AppHost/GhostCodeBackend.AppHost.csproj",
+  "projectFilePath": "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/GhostCodeBackend.AppHost/GhostCodeBackend.AppHost.csproj",
   "expectedPackageFiles": [
     "/home/byxesh/.nuget/packages/aspire.dashboard.sdk.linux-x64/9.5.1/aspire.dashboard.sdk.linux-x64.9.5.1.nupkg.sha512",
     "/home/byxesh/.nuget/packages/aspire.hosting/9.5.1/aspire.hosting.9.5.1.nupkg.sha512",

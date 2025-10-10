@@ -17,15 +17,17 @@ using System.Reflection;
     "xt/"))]
 [assembly: System.Reflection.AssemblyMetadata("dcpbinpath", ("/home/byxesh/.nuget/packages/aspire.hosting.orchestration.linux-x64/9.5.1/tools/e" +
     "xt/bin/"))]
-[assembly: System.Reflection.AssemblyMetadata("apphostprojectpath", "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend.AppHost")]
+[assembly: System.Reflection.AssemblyMetadata("apphostprojectpath", ("/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/GhostCodeBackend.App" +
+    "Host"))]
 [assembly: System.Reflection.AssemblyMetadata("apphostprojectname", "GhostCodeBackend.AppHost.csproj")]
 [assembly: System.Reflection.AssemblyMetadata("aspiredashboardpath", ("/home/byxesh/.nuget/packages/aspire.dashboard.sdk.linux-x64/9.5.1/tools/Aspire.Da" +
     "shboard"))]
-[assembly: System.Reflection.AssemblyMetadataAttribute("apphostprojectbaseintermediateoutputpath", "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend.AppHost/obj/")]
+[assembly: System.Reflection.AssemblyMetadataAttribute("apphostprojectbaseintermediateoutputpath", ("/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/GhostCodeBackend.App" +
+    "Host/obj/"))]
 [assembly: System.Reflection.AssemblyCompanyAttribute("GhostCodeBackend.AppHost")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0894f92c548ffe07f6dee88b11de9b97c4920c73")]
 [assembly: System.Reflection.AssemblyProductAttribute("GhostCodeBackend.AppHost")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GhostCodeBackend.AppHost")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

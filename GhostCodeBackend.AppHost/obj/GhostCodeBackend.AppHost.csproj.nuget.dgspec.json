@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend.AppHost/GhostCodeBackend.AppHost.csproj": {}
+    "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/GhostCodeBackend.AppHost/GhostCodeBackend.AppHost.csproj": {}
   },
   "projects": {
-    "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend.AppHost/GhostCodeBackend.AppHost.csproj": {
+    "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/GhostCodeBackend.AppHost/GhostCodeBackend.AppHost.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend.AppHost/GhostCodeBackend.AppHost.csproj",
+        "projectUniqueName": "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/GhostCodeBackend.AppHost/GhostCodeBackend.AppHost.csproj",
         "projectName": "GhostCodeBackend.AppHost",
-        "projectPath": "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend.AppHost/GhostCodeBackend.AppHost.csproj",
+        "projectPath": "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/GhostCodeBackend.AppHost/GhostCodeBackend.AppHost.csproj",
         "packagesPath": "/home/byxesh/.nuget/packages/",
-        "outputPath": "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend.AppHost/obj/",
+        "outputPath": "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/GhostCodeBackend.AppHost/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/byxesh/.nuget/NuGet/NuGet.Config"

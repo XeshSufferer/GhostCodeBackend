@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GhostCodeBackend.ServiceDefaults")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0894f92c548ffe07f6dee88b11de9b97c4920c73")]
 [assembly: System.Reflection.AssemblyProductAttribute("GhostCodeBackend.ServiceDefaults")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GhostCodeBackend.ServiceDefaults")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
