@@ -63,7 +63,8 @@ P.S Да, он сейчас идентичен Register Request DTO, но это
 
   ```
     {
-    "recoveryCode": "string"
+      "recoveryCode": "string"
+      "refreshToken": "string"
     }
   ```
 

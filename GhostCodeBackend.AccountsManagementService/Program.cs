@@ -2,6 +2,8 @@
 using GhostCodeBackend.AccountsManagementService.Repositories;
 using GhostCodeBackend.Shared.DTO.Requests;
 using GhostCodeBackend.Shared.RPC.MessageBroker;
+using GhostCodeBackend.Shared.RPC.Tracker;
+using GhostCodeBakend.AccountsManagementService.Rpc;
 using GhostCodeBakend.AccountsManagementService.Services;
 using GhostCodeBakend.AccountsManagementService.Utils;
 using MongoDB.Driver;
@@ -17,17 +19,22 @@ builder.Services.AddOpenTelemetry()
     .WithMetrics(m => m.AddAspNetCoreInstrumentation())
     .UseOtlpExporter();
 
+builder.AddRabbitMQClient("rabbitmq");
 
-
+// Utils
 builder.Services.AddSingleton<IHasher, Hasher>();
 builder.Services.AddSingleton<IRandomWordGenerator, RandomWordGenerator>();
 
+// Repo&Services
 builder.Services.AddSingleton<IAccountsRepository, AccountsRepository>();
-
 builder.Services.AddScoped<IAccountsService,  AccountsService>();
 
-builder.Services.AddScoped<IRabbitMQService, RabbitMQService>();
+// RPC
+builder.Services.AddSingleton<IUniversalRequestTracker, UniversalRequestTracker>();
+builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
+builder.Services.AddSingleton<IRpcConsumer, RpcConsumer>();
 
+// Mongo
 builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(builder.Configuration.GetConnectionString("mongodb")));
 builder.Services.AddSingleton<IMongoDatabase>(sp =>
 {
@@ -39,6 +46,10 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
 builder.AddServiceDefaults();
 var app = builder.Build();
 app.MapDefaultEndpoints(); 
+
+
+await app.Services.GetRequiredService<IRabbitMQService>().InitializeAsync();
+await app.Services.GetRequiredService<IRpcConsumer>().InitConsume();
 
 if (app.Environment.IsDevelopment())
 {
@@ -53,7 +64,8 @@ app.MapPost("/register", async (RegisterRequestDTO req, IAccountsService account
     
     return Results.Ok(new
     {
-        recoveryCode = result.recoveryCode
+        recoveryCode = result.recoveryCode,
+        refreshToken = result.newRefresh
     });
 });
 
@@ -63,7 +75,8 @@ app.MapPost("/login", async (LoginRequestDTO req, IAccountsService accounts) =>
     
     return results.result ? Results.Ok(new
     {
-        data = results.userData
+        data = results.userData,
+        refreshToken = results.newRefresh
     }
     ) :  Results.BadRequest("Login failed");
 });

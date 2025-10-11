@@ -4,7 +4,7 @@ namespace GhostCodeBackend.AccountsManagementService.Repositories;
 
 public interface IAccountsRepository
 {
-    Task<bool> CreateUserAsync(User user, CancellationToken ct = default);
+    Task<(bool, User)> CreateUserAsync(User user, CancellationToken ct = default);
     Task<User?> GetByIdUserAsync(string id, CancellationToken ct = default);
     Task<bool> UpdateUserAsync(User user, CancellationToken ct = default);
     Task<bool> DeleteUserAsync(User user, CancellationToken ct = default);

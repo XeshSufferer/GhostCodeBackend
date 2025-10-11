@@ -15,7 +15,14 @@ public class RefreshTokensRepository : IRefreshTokensRepository
         _db = db;
         
         _db.CreateCollection("refresh_tokens");
+        
+        var indexKeys =  Builders<RefreshToken>.IndexKeys
+            .Ascending(t => t.Token)
+            .Ascending(t => t.UserId);
+        var indexModel = new CreateIndexModel<RefreshToken>(indexKeys, new CreateIndexOptions{ Unique = false });
+        
         _tokens = db.GetCollection<RefreshToken>("refresh_tokens");
+        _tokens.Indexes.CreateOne(indexModel);
     }
 
     public async Task<RefreshToken?> Get(string token)
@@ -23,11 +30,17 @@ public class RefreshTokensRepository : IRefreshTokensRepository
         return await _tokens.AsQueryable().Where(t => t.Token == token).FirstOrDefaultAsync();
     }
 
+    public async Task<RefreshToken?> GetByUserId(string userId)
+    {
+        return await _tokens.AsQueryable().Where(t => t.UserId == userId).FirstOrDefaultAsync();
+    }
+
     public async Task<bool> Insert(RefreshToken token)
     {
         try
         {
-            await _tokens.InsertOneAsync(token);
+            var opts = new ReplaceOptions { IsUpsert = true };
+            await _tokens.ReplaceOneAsync(u => u.Id == token.Id || token.UserId == u.UserId, token, opts);
             return true;
         }
         catch (Exception e)

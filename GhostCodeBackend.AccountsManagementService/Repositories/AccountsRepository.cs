@@ -38,16 +38,16 @@ public class AccountsRepository : IAccountsRepository
         }
     }
 
-    public async Task<bool> CreateUserAsync(User user, CancellationToken ct = default)
+    public async Task<(bool, User)> CreateUserAsync(User user, CancellationToken ct = default)
     {
         try
         {
             await _users.InsertOneAsync(user, ct);
-            return true;
+            return (true, user);
         }
         catch (Exception e)
         {
-            return false;
+            return (false, null);
         }
     }
 
@@ -55,9 +55,16 @@ public class AccountsRepository : IAccountsRepository
     {
         try
         {
+            var existingUser = await _users.Find(u => u.Id == user.Id).FirstOrDefaultAsync(ct);
+            if (existingUser == null)
+            {
+                return false;
+            }
+            
             var opts = new ReplaceOptions { IsUpsert = false };
-            await _users.ReplaceOneAsync(u => u.Id == user.Id, user, opts, ct);
-            return true;
+            var result = await _users.ReplaceOneAsync(u => u.Id == user.Id, user, opts, ct);
+            
+            return result.IsAcknowledged && result.ModifiedCount > 0;
         }
         catch (Exception e)
         {
@@ -93,13 +100,20 @@ public class AccountsRepository : IAccountsRepository
 
     public async Task<User?> GetByLoginAndPasswordUserAsync(string login, string password, CancellationToken ct = default)
     {
-        return await _users.AsQueryable().Where(u => u.Login == login && _hasher.Verify(u.PasswordHash, password)).FirstOrDefaultAsync(ct);
+        var user = await _users.AsQueryable()
+            .Where(u => u.Login == login)
+            .FirstOrDefaultAsync(ct);
+
+        if (user == null || !_hasher.VerifyBcrypt(user.PasswordHash, password))
+            return null;
+
+        return user;
     }
 
     public async Task<User?> GetUserByRecoveryCodeAndLogin(string recoveryCode, string login,
         CancellationToken ct = default)
     {
-        return await _users.AsQueryable().Where(u => u.Login == login && _hasher.Verify(u.RecoveryCodeHash, recoveryCode)).FirstOrDefaultAsync(ct);
+        return await _users.AsQueryable().Where(u => u.Login == login && u.RecoveryCodeHash == recoveryCode).FirstOrDefaultAsync(ct);
     }
 
 

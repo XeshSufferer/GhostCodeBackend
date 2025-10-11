@@ -2,6 +2,7 @@ namespace GhostCodeBakend.AccountsManagementService.Utils;
 
 public interface IHasher
 {
-    string Hash(string password);
-    bool Verify(string hash, string password);
+    string Bcrypt(string password);
+    bool VerifyBcrypt(string hash, string password);
+    string Sha256(string input);
 }

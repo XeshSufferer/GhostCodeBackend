@@ -9,7 +9,7 @@ var mongo = builder.AddMongoDB("mongodb", 3363)
 
 
 var gateway = builder.AddYarp("gateway").WithHostPort(8080);
-
+var rabbitmq = builder.AddRabbitMQ("rabbitmq");
 
 var accountsManagementService =
     builder.AddDockerfile("account-management", "..", "GhostCodeBackend.AccountsManagementService/Dockerfile")
@@ -18,7 +18,8 @@ var accountsManagementService =
         .WaitFor(mongo)
         .WaitFor(cache)
         .WithReference(mongo, "mongodb")
-        .WithReference(cache, "redis");
+        .WithReference(cache, "redis")
+        .WithReference(rabbitmq, "rabbitmq");
 
 var tokenFactory =
     builder.AddDockerfile("token-factory", "..", "GhostCodeBackend.TokenFactory/Dockerfile")
@@ -28,6 +29,7 @@ var tokenFactory =
         .WaitFor(cache)
         .WithReference(mongo, "mongodb")
         .WithReference(cache, "redis")
+        .WithReference(rabbitmq, "rabbitmq")
         .WithEnvironment("JWTAudience", "Audience")
         .WithEnvironment("JWTIssuer", "Issuer")
         .WithEnvironment("JWTKey", "SUPER_SECRET_256_BIT_KEY_AT_LEAST_32_CHARS")

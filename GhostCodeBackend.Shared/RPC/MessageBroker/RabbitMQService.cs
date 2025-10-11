@@ -3,6 +3,7 @@ using System.Text.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
+
 namespace GhostCodeBackend.Shared.RPC.MessageBroker;
 
 
@@ -12,33 +13,16 @@ public class RabbitMQService : IRabbitMQService, IAsyncDisposable
     private IChannel _channel;
     private readonly HashSet<string> _declaredQueues = new();
     
-    
-    private readonly string _hostName = "localhost";
-    private readonly string _userName = "guest";
-    private readonly string _password = "guest";
-    private readonly int _port = 5672;
 
     private bool _initialized = false;
     
-    public RabbitMQService(string hostname, int port, string username, string password)
+    public RabbitMQService(IConnection connection)
     {
-        _password = password;
-        _hostName = hostname;
-        _userName = username;
-        _port = port;
+        _connection = connection;
     }
 
     public async Task InitializeAsync()
     {
-        var factory = new ConnectionFactory
-        {
-            HostName = _hostName,
-            Port = _port,
-            UserName = _userName,
-            Password = _password,
-        };
-        
-        _connection = await factory.CreateConnectionAsync();
         _channel = await _connection.CreateChannelAsync();
         
         _initialized = true;

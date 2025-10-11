@@ -27,7 +27,7 @@ public class JwtService : IJwtService
         _logger.LogInformation("Validated token: {token} | result: {result}", token, validateResult.result);
         if (!validateResult.result) return (false, "", "");
         var rotateResult = await _refresher.RotateToken(validateResult.token);
-        _logger.LogInformation("Rotated token: {token} | result: {result} | newToken: {newToken}", token, rotateResult.result, rotateResult.newToken);
+        _logger.LogInformation("Rotated token: {token} | result: {result} | newToken: {newToken}", token, rotateResult.result, rotateResult.newToken.UserId);
         if (rotateResult.result)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Key));

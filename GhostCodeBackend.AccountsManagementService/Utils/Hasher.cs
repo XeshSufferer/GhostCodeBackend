@@ -1,14 +1,33 @@
+using System.Security.Cryptography;
+using System.Text;
+
 namespace GhostCodeBakend.AccountsManagementService.Utils;
 
 public class Hasher : IHasher
 {
-    public string Hash(string password)
+    public string Bcrypt(string password)
     {
         return BCrypt.Net.BCrypt.HashPassword(password);
     }
 
-    public bool Verify(string hash, string password)
+    public bool VerifyBcrypt(string hash, string password)
     {
         return BCrypt.Net.BCrypt.Verify(password, hash);
+    }
+    
+    public string Sha256(string input)
+    {
+        using (SHA256 sha256Hash = SHA256.Create())
+        {
+            byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
+            
+            StringBuilder builder = new StringBuilder();
+            
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                builder.Append(bytes[i].ToString("x2"));
+            }
+            return builder.ToString();
+        }
     }
 }

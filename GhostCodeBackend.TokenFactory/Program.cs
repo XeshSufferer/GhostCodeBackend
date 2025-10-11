@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using GhostCodeBackend.Shared.DTO.Requests;
+using GhostCodeBackend.Shared.RPC.MessageBroker;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
@@ -9,6 +10,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using TokenFactory.CfgObjects;
 using TokenFactory.Repositories;
+using TokenFactory.Rpc;
 using TokenFactory.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +24,10 @@ builder.Services.AddOpenTelemetry()
     .UseOtlpExporter();
 
 
+builder.AddRabbitMQClient("rabbitmq");
+
+builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
+builder.Services.AddSingleton<IRpcResponser, RpcResponser>();
 builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(cfg.GetConnectionString("mongodb")));
 builder.Services.AddSingleton<IMongoDatabase>(sp =>
 {
@@ -87,6 +93,9 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapDefaultEndpoints();
+
+await app.Services.GetRequiredService<IRabbitMQService>().InitializeAsync();
+await app.Services.GetRequiredService<IRpcResponser>().InitResponses();
 
 app.MapGet("/checkToken", () =>
 {
