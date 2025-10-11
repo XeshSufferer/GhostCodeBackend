@@ -44,7 +44,9 @@ gateway.WithConfiguration(yarp =>
     
     yarp.AddRoute("/api/tokens/{**catch-all}", tokenFactory.GetEndpoint("token-factory"))
         .WithTransformPathRemovePrefix("/api/tokens");;
-});
+})
+.WaitFor(tokenFactory)
+.WaitFor(accountsManagementService);
 
 
 

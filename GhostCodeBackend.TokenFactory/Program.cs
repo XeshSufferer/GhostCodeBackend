@@ -89,7 +89,7 @@ app.MapDefaultEndpoints();
 
 app.MapGet("/checkToken", (ClaimsPrincipal user) =>
 {
-    Results.Ok($"Hello! Your id is:  {user.Identity.Name}");
+    return Results.Ok($"Hello! Your id is: {user.Identity.Name}");
 }).RequireAuthorization();
 
 app.MapGet("/debug/CreateToken/refresh/{id}", async (string id, IRefreshTokensService refreshTokensService) =>
