@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using GhostCodeBackend.Shared.DTO.Requests;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
@@ -87,21 +88,21 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapDefaultEndpoints();
 
-app.MapGet("/checkToken", (ClaimsPrincipal user) =>
+app.MapGet("/checkToken", () =>
 {
-    return Results.Ok($"Hello! Your id is: {user.Identity.Name}");
+    return Results.Ok("valid");
 }).RequireAuthorization();
 
-app.MapGet("/debug/CreateToken/refresh/{id}", async (string id, IRefreshTokensService refreshTokensService) =>
+app.MapPost("/refresh", async (RefreshRequestDTO req, IJwtService jwtService) =>
 {
-    return Results.Ok((await refreshTokensService.CreateToken(id)).token.Token);
-});
+    var result = await jwtService.CreateToken(req.Token);
 
-app.MapGet("/debug/CreateToken/jwt/{refreshToken}", async (string refreshToken, IJwtService jwtService) =>
-{
-    
-    var result = await jwtService.CreateToken(refreshToken);
-    return Results.Ok($"new Refresh: {result.newRefresh} | new Jwt: {result.newJwt} | results: {result.result}");
+    return result.result
+        ? Results.Ok(new
+        {
+            newRefresh = result.newRefresh,
+            newJwt = result.newJwt
+        }) : Results.BadRequest("invalid refresh token");
 });
 
 

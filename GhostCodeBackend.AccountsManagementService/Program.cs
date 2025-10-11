@@ -49,7 +49,7 @@ app.MapPost("/register", async (RegisterRequestDTO req, IAccountsService account
     return result.result ? Results.Ok(new
     {
         recoveryCode =  result.recoveryCode,
-    }) : Results.InternalServerError("Account registration failed");
+    }) : Results.BadRequest("Account registration failed");
 });
 
 app.MapPost("/login", async (LoginRequestDTO req, IAccountsService accounts) =>
@@ -60,7 +60,7 @@ app.MapPost("/login", async (LoginRequestDTO req, IAccountsService accounts) =>
     {
         data = results.userData
     }
-    ) :  Results.InternalServerError("Login failed");
+    ) :  Results.BadRequest("Login failed");
 });
 
 app.MapPost("/recovery", async (AccountRecoveryRequestDTO req, IAccountsService accounts) =>
@@ -70,7 +70,7 @@ app.MapPost("/recovery", async (AccountRecoveryRequestDTO req, IAccountsService 
     return results.result ? Results.Ok(new
     {
         newRecovery = results.newRecoveryCode,
-    }) : Results.InternalServerError("Password reset failed");
+    }) : Results.BadRequest("Password reset failed");
 });
 
 
