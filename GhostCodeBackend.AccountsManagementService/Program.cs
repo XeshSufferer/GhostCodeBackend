@@ -19,6 +19,17 @@ builder.Services.AddOpenTelemetry()
     .WithMetrics(m => m.AddAspNetCoreInstrumentation())
     .UseOtlpExporter();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", builder =>
+    {
+        builder.WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 builder.AddRabbitMQClient("rabbitmq");
 
 // Utils
@@ -43,10 +54,13 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
 });
 
 
+
+
 builder.AddServiceDefaults();
 var app = builder.Build();
 app.MapDefaultEndpoints(); 
 
+app.UseCors("AllowFrontend");
 
 await app.Services.GetRequiredService<IRabbitMQService>().InitializeAsync();
 await app.Services.GetRequiredService<IRpcConsumer>().InitConsume();
