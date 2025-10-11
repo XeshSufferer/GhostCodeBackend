@@ -19,7 +19,7 @@ public class AccountsService : IAccountsService
         _randomWordGenerator = randomWordGenerator;
     }
     
-    public async Task<(bool, User, string)> RegisterAsync(RegisterRequestDTO req, CancellationToken ct = default)
+    public async Task<(bool result, User userObj, string recoveryCode)> RegisterAsync(RegisterRequestDTO req, CancellationToken ct = default)
     {
         string recoveryCode = _randomWordGenerator.GetRandomWord(20);
         
@@ -35,7 +35,7 @@ public class AccountsService : IAccountsService
         return (result, newUser, recoveryCode);
     }
 
-    public async Task<(bool, UserData)> LoginAsync(LoginRequestDTO req, CancellationToken ct = default)
+    public async Task<(bool result, UserData userData)> LoginAsync(LoginRequestDTO req, CancellationToken ct = default)
     {
         User? findedAccount = await _accounts.GetByLoginAndPasswordUserAsync(req.Login, req.Password, ct);
         return (findedAccount != null, new UserData());
@@ -46,7 +46,7 @@ public class AccountsService : IAccountsService
         return await _accounts.DeleteUserAsync(id, ct);
     }
 
-    public async Task<(bool, string)> PasswordReset(string login, string recoveryCode, string newPassword, CancellationToken ct = default)
+    public async Task<(bool result, string newRecoveryCode)> PasswordReset(string login, string recoveryCode, string newPassword, CancellationToken ct = default)
     {
         User? user = await _accounts.GetUserByRecoveryCodeAndLogin(recoveryCode, login, ct);
         user.PasswordHash = _hasher.Hash(newPassword);

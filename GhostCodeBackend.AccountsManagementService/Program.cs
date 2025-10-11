@@ -25,11 +25,11 @@ builder.Services.AddSingleton<IAccountsRepository, AccountsRepository>();
 
 builder.Services.AddScoped<IAccountsService,  AccountsService>();
 
-builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(builder.Configuration["mongodb:connectionString"]));
+builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(builder.Configuration.GetConnectionString("mongodb")));
 builder.Services.AddSingleton<IMongoDatabase>(sp =>
 {
     var client = sp.GetRequiredService<IMongoClient>();
-    return client.GetDatabase(builder.Configuration["mongodb:databaseName"]);
+    return client.GetDatabase("main");
 });
 
 
@@ -46,9 +46,9 @@ app.MapPost("/register", async (RegisterRequestDTO req, IAccountsService account
 {
     var result = await accounts.RegisterAsync(req);
     
-    return result.Item1 ? Results.Ok(new
+    return result.result ? Results.Ok(new
     {
-        recoveryCode =  result.Item3,
+        recoveryCode =  result.recoveryCode,
     }) : Results.InternalServerError("Account registration failed");
 });
 
@@ -56,9 +56,9 @@ app.MapPost("/login", async (LoginRequestDTO req, IAccountsService accounts) =>
 {
     var results = await accounts.LoginAsync(req);
     
-    return results.Item1 ? Results.Ok(new
+    return results.result ? Results.Ok(new
     {
-        data = results.Item1
+        data = results.userData
     }
     ) :  Results.InternalServerError("Login failed");
 });
@@ -67,9 +67,9 @@ app.MapPost("/recovery", async (AccountRecoveryRequestDTO req, IAccountsService 
 {
     var results = await accounts.PasswordReset(req.Login, req.RecoveryCode, req.NewPassword);
     
-    return results.Item1 ? Results.Ok(new
+    return results.result ? Results.Ok(new
     {
-        newRecovery = results.Item2,
+        newRecovery = results.newRecoveryCode,
     }) : Results.InternalServerError("Password reset failed");
 });
 
