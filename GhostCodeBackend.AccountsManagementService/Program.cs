@@ -1,6 +1,7 @@
 
 using GhostCodeBackend.AccountsManagementService.Repositories;
 using GhostCodeBackend.Shared.DTO.Requests;
+using GhostCodeBackend.Shared.RPC.MessageBroker;
 using GhostCodeBakend.AccountsManagementService.Services;
 using GhostCodeBakend.AccountsManagementService.Utils;
 using MongoDB.Driver;
@@ -25,6 +26,8 @@ builder.Services.AddSingleton<IAccountsRepository, AccountsRepository>();
 
 builder.Services.AddScoped<IAccountsService,  AccountsService>();
 
+builder.Services.AddScoped<IRabbitMQService, RabbitMQService>();
+
 builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(builder.Configuration.GetConnectionString("mongodb")));
 builder.Services.AddSingleton<IMongoDatabase>(sp =>
 {
@@ -46,10 +49,12 @@ app.MapPost("/register", async (RegisterRequestDTO req, IAccountsService account
 {
     var result = await accounts.RegisterAsync(req);
     
-    return result.result ? Results.Ok(new
+    if(!result.result) return Results.BadRequest("Account registration failed");
+    
+    return Results.Ok(new
     {
-        recoveryCode =  result.recoveryCode,
-    }) : Results.BadRequest("Account registration failed");
+        recoveryCode = result.recoveryCode
+    });
 });
 
 app.MapPost("/login", async (LoginRequestDTO req, IAccountsService accounts) =>

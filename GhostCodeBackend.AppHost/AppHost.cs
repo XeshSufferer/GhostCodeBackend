@@ -31,8 +31,8 @@ var tokenFactory =
         .WithEnvironment("JWTAudience", "Audience")
         .WithEnvironment("JWTIssuer", "Issuer")
         .WithEnvironment("JWTKey", "SUPER_SECRET_256_BIT_KEY_AT_LEAST_32_CHARS")
-        .WithEnvironment("JWTExpireMinutes", "60")
-        .WithEnvironment("RefreshExpireDays", "15");
+        .WithEnvironment("JWTExpireMinutes", "15")
+        .WithEnvironment("RefreshExpireDays", "30");
 
 
 
