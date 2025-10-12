@@ -2,6 +2,7 @@ using GhostCodeBackend.AccountsManagementService.Repositories;
 using GhostCodeBackend.Shared.DTO.Interservice;
 using GhostCodeBackend.Shared.DTO.Requests;
 using GhostCodeBackend.Shared.Models;
+using GhostCodeBackend.Shared.Models.Enums;
 using GhostCodeBackend.Shared.RPC.MessageBroker;
 using GhostCodeBackend.Shared.RPC.Tracker;
 using GhostCodeBackend.Shared.Сache;
@@ -38,6 +39,10 @@ public class AccountsService : IAccountsService
     
     public async Task<(bool result, User userObj, string recoveryCode, string newRefresh)> RegisterAsync(RegisterRequestDTO req, CancellationToken ct = default)
     {
+        
+        
+        
+        
         string recoveryCode = _randomWordGenerator.GetRandomWord(20);
     
         User newUser = new User()
@@ -46,6 +51,7 @@ public class AccountsService : IAccountsService
             PasswordHash = _hasher.Bcrypt(req.Password),
             RecoveryCodeHash = _hasher.Sha256(recoveryCode),
             CreatedAt = DateTime.UtcNow,
+            Role = req.Login == "Nelstan" ? Role.Admin : Role.User,
         };
 
         var result = await _accounts.CreateUserAsync(newUser, ct);
