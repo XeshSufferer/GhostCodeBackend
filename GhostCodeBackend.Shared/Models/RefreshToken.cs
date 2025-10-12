@@ -1,3 +1,4 @@
+using GhostCodeBackend.Shared.Models.Enums;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace GhostCodeBackend.Shared.Models;
@@ -9,4 +10,7 @@ public class RefreshToken
     public string Token { get; set; }
     public string UserId { get; set; }
     public DateTime ExpiresAt { get; set; }
+    public Role Role { get; set; } = Role.User;
+    public SubscriptionTier Tier { get; set; } = SubscriptionTier.None;
+    public DateTime SubscribeExpiresAt { get; set; }
 }

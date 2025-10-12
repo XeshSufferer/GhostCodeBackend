@@ -6,6 +6,5 @@ namespace GhostCodeBackend.Shared.Models.Enums;
 public enum Role
 {
     User,
-    Moderator,
     Admin
 }

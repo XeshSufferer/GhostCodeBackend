@@ -65,6 +65,18 @@ builder.Services.AddOpenApi();
 
 builder.AddMinioClient("minio");
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", builder =>
+    {
+        builder.WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
+
 builder.Services.AddRateLimiter(opt =>
 {
     opt.AddFixedWindowLimiter("per-ip", config =>
@@ -88,18 +100,6 @@ var app = builder.Build();
 
 app.UseMiddleware<IpBanMiddleware>();
 
-
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", builder =>
-    {
-        builder.WithOrigins("http://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
 
 app.MapDefaultEndpoints();
 
@@ -153,6 +153,9 @@ app.MapPost("/uploadHeader", async (IFormFile file, ICustomizerService customize
 app.MapPost("/uploadAvatar", async (IFormFile file, ICustomizerService customizer, ClaimsPrincipal user) =>
 {
     var result = await customizer.SetAvatar(file, user.Identity.Name);
+    
+    
+    
     return result.result ? Results.Ok(new { link = result.filename }) : Results.BadRequest("Error uploading avatar");
 }).DisableAntiforgery().RequireAuthorization().RequireRateLimiting("per-ip");
 

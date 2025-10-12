@@ -6,7 +6,5 @@ namespace GhostCodeBackend.Shared.Models.Enums;
 public enum SubscriptionTier
 {
     None,
-    Silver,
-    Gold,
-    Platinum
+    Premium
 }

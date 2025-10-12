@@ -38,7 +38,13 @@ public class JwtService : IJwtService
                 expires: DateTime.UtcNow.AddMinutes(_options.ExpireMinutes),
                 issuer: _options.Issuer,
                 signingCredentials: creds,
-                claims: new[] { new Claim(ClaimTypes.Name, validateResult.token.UserId) }
+                claims: new[]
+                {
+                    new Claim(ClaimTypes.Name, validateResult.token.UserId),
+                    new Claim(JwtRegisteredClaimNames.Jti, validateResult.token.UserId),
+                    new Claim(ClaimTypes.Role,  validateResult.token.Role.ToString()),
+                    new Claim(JwtRegisteredClaimNames.Sub, validateResult.token.Tier.ToString()),
+                }
             );
 
             return (true, 

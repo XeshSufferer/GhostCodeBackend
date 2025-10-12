@@ -1,4 +1,6 @@
+using GhostCodeBackend.Shared.DTO.Interservice;
 using GhostCodeBackend.Shared.Models;
+using GhostCodeBackend.Shared.Models.Enums;
 using TokenFactory.Repositories;
 
 namespace TokenFactory.Services;
@@ -49,13 +51,15 @@ public class RefreshTokensService : IRefreshTokensService
         return await _refreshRepository.Delete(token);
     }
 
-    public async Task<(bool result, RefreshToken? token)> CreateToken(string userid)
+    public async Task<(bool result, RefreshToken? token)> CreateToken(DataForJWTWrite userData)
     {
         RefreshToken token = new RefreshToken
         {
             ExpiresAt = DateTime.UtcNow + TimeSpan.FromDays(_daysBeforeExpiryRefresh),
             Token = Guid.NewGuid().ToString(),
-            UserId = userid
+            UserId = userData.Id,
+            Role = userData.Role,
+            Tier = userData.SubscribeExpiresAt < DateTime.UtcNow ? SubscriptionTier.None : userData.Tier
         };
         
         var result = await _refreshRepository.Insert(token);

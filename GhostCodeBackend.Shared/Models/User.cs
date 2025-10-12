@@ -15,6 +15,10 @@ public class User
     public Role Role { get; set; } = Role.User;
     public SubscriptionTier Tier { get; set; } = SubscriptionTier.None;
     
+    public DateTime CreatedAt { get; set; }
+    
+    public DateTime SubscribeExpiresAt { get; set; }
+    
     // Customize
     public string Description { get; set; } = "It's me!";
     public string AvatarLink { get; set; } = "default";

@@ -19,15 +19,20 @@ public class RpcResponser : IRpcResponser
     public async Task InitResponses()
     {
         
-        await _rabbit.StartConsumingAsync<Message<string>>("TokenFactory.CreateRefresh.Input",
+        await _rabbit.StartConsumingAsync<Message<DataForJWTWrite>>("TokenFactory.CreateRefresh.Input",
             async (message) =>
             {
                 var token = await _refreshTokens.CreateToken(message.Data);
                 message.IsSuccess = token.result;
 
-                message.Data = token.token.Token;
+                Message<string> response = new Message<string>
+                {
+                    CorrelationId = message.CorrelationId,
+                    IsSuccess = token.result,
+                    Data = token.token.Token
+                };
                 
-                await _rabbit.SendMessageAsync<Message<string>>(message, "TokenFactory.CreateRefresh.Output");
+                await _rabbit.SendMessageAsync<Message<string>>(response, "TokenFactory.CreateRefresh.Output");
             });
     }
 }

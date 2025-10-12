@@ -40,6 +40,7 @@ public class AccountsService : IAccountsService
             Login = req.Login,
             PasswordHash = _hasher.Bcrypt(req.Password),
             RecoveryCodeHash = _hasher.Sha256(recoveryCode),
+            CreatedAt = DateTime.UtcNow,
         };
 
         var result = await _accounts.CreateUserAsync(newUser, ct);
@@ -47,12 +48,12 @@ public class AccountsService : IAccountsService
         if(!result.Item1) return (false, null, null,  null);
 
         string correlationId = _tracker.CreatePendingRequest();
-        Message<string> msg = new Message<string>
+        Message<DataForJWTWrite> msg = new Message<DataForJWTWrite>
         {
-            Data = result.Item2.Id,  
+            Data = new DataForJWTWrite().MapFromDomainUser(result.Item2),  
             CorrelationId = correlationId,
         };
-        await _rabbit.SendMessageAsync<Message<string>>(msg, "TokenFactory.CreateRefresh.Input");
+        await _rabbit.SendMessageAsync<Message<DataForJWTWrite>>(msg, "TokenFactory.CreateRefresh.Input");
         Message<string> refreshToken = await _tracker.WaitForResponseAsync<Message<string>>(correlationId);
         return (result.Item1 && refreshToken.IsSuccess, newUser, recoveryCode, refreshToken.Data);
     }
@@ -64,13 +65,13 @@ public class AccountsService : IAccountsService
         
         string correlationId = _tracker.CreatePendingRequest();
         
-        Message<string> msg = new Message<string>
+        Message<DataForJWTWrite> msg = new Message<DataForJWTWrite>
         {
-            Data = findedAccount.Id,
+            Data = new DataForJWTWrite().MapFromDomainUser(findedAccount),
             CorrelationId = correlationId,
         };
         
-        await _rabbit.SendMessageAsync<Message<string>>(msg, "TokenFactory.CreateRefresh.Input");
+        await _rabbit.SendMessageAsync<Message<DataForJWTWrite>>(msg, "TokenFactory.CreateRefresh.Input");
         Message<string> refreshToken = await _tracker.WaitForResponseAsync<Message<string>>(correlationId);
         return (refreshToken.IsSuccess, new UserData().MapFromDomainUser(findedAccount), refreshToken.Data);
     }
