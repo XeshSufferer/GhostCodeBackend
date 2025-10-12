@@ -11,9 +11,11 @@
     <ItemGroup>
         <PackageReference Include="CommunityToolkit.Aspire.Minio.Client" Version="9.8.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.7" />
+        <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9"/>
         <PackageReference Include="MongoDB.Driver" Version="3.5.0" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+        <PackageReference Include="System.Threading.RateLimiting" Version="9.0.6" />
         <ProjectReference Include="../GhostCodeBackend.ServiceDefaults/GhostCodeBackend.ServiceDefaults.csproj" />
         <ProjectReference Include="../GhostCodeBackend.Shared/GhostCodeBackend.Shared.csproj"/>
     </ItemGroup>

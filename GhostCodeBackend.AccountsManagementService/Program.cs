@@ -6,6 +6,7 @@ using GhostCodeBackend.Shared.RPC.Tracker;
 using GhostCodeBakend.AccountsManagementService.Rpc;
 using GhostCodeBakend.AccountsManagementService.Services;
 using GhostCodeBakend.AccountsManagementService.Utils;
+using Microsoft.AspNetCore.RateLimiting;
 using MongoDB.Driver;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
@@ -28,6 +29,25 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowCredentials();
     });
+});
+
+builder.Services.AddRateLimiter(opt =>
+{
+    opt.AddFixedWindowLimiter("per-ip", config =>
+    {
+        config.PermitLimit   = 5;          // сколько
+        config.Window        = TimeSpan.FromMinutes(1);
+        config.QueueLimit    = 0;           // без очереди – сразу 429
+        config.AutoReplenishment = true;
+    });
+    
+    opt.OnRejected = (ctx, ct) =>
+    {
+        var ip = ctx.HttpContext.Connection.RemoteIpAddress?.ToString();
+        IpBanMiddleware.Ban(ip, TimeSpan.FromMinutes(10));
+        ctx.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        return ValueTask.CompletedTask;
+    };
 });
 
 builder.AddRabbitMQClient("rabbitmq");
@@ -58,8 +78,13 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
 
 builder.AddServiceDefaults();
 var app = builder.Build();
-app.MapDefaultEndpoints(); 
 
+app.UseMiddleware<IpBanMiddleware>();
+
+
+
+app.MapDefaultEndpoints();
+app.UseRateLimiter();
 app.UseCors("AllowFrontend");
 
 await app.Services.GetRequiredService<IRabbitMQService>().InitializeAsync();
@@ -81,7 +106,7 @@ app.MapPost("/register", async (RegisterRequestDTO req, IAccountsService account
         recoveryCode = result.recoveryCode,
         refreshToken = result.newRefresh
     });
-});
+}).RequireRateLimiting("per-ip");
 
 app.MapPost("/login", async (LoginRequestDTO req, IAccountsService accounts) =>
 {
@@ -93,7 +118,7 @@ app.MapPost("/login", async (LoginRequestDTO req, IAccountsService accounts) =>
         refreshToken = results.newRefresh
     }
     ) :  Results.BadRequest("Login failed");
-});
+}).RequireRateLimiting("per-ip");
 
 app.MapPost("/recovery", async (AccountRecoveryRequestDTO req, IAccountsService accounts) =>
 {
@@ -103,7 +128,7 @@ app.MapPost("/recovery", async (AccountRecoveryRequestDTO req, IAccountsService 
     {
         newRecovery = results.newRecoveryCode,
     }) : Results.BadRequest("Password reset failed");
-});
+}).RequireRateLimiting("per-ip");
 
 
 

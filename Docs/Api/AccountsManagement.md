@@ -83,7 +83,14 @@ P.S Да, он сейчас идентичен Register Request DTO, но это
 
  ```
     {
-      "data": {}
+      "data": {
+        "name": "string",
+        "role": "string",
+        "tier": "string",
+        "description": "string",
+        "avatarLink": "string",
+        "headerLink": "string"
+      },
       "refreshToken": "string"
     }
   ```
@@ -105,3 +112,15 @@ P.S Да, он сейчас идентичен Register Request DTO, но это
     "newRecovery": "string"
     }
   ```
+
+===
+
+## Rate Limits ⚡
+
+- **Глобальный лимит**: 5 запросов в минуту
+- **При превышении**: таймаут на 10 минут
+
+### Важные замечания:
+- Лимит применяется ко ВСЕМ эндпоинтам сервиса
+- Отсчет начинается с первого запроса
+- После таймаута счетчик сбрасывается
