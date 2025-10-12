@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using GhostCodeBackend.Shared.Models;
 using Microsoft.IdentityModel.Tokens;
-using TokenFactory.CfgObjects;
+using Shared.CfgObjects;
 
 namespace TokenFactory.Services;
 

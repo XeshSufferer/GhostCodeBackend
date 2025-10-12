@@ -72,7 +72,7 @@ public class AccountsService : IAccountsService
         
         await _rabbit.SendMessageAsync<Message<string>>(msg, "TokenFactory.CreateRefresh.Input");
         Message<string> refreshToken = await _tracker.WaitForResponseAsync<Message<string>>(correlationId);
-        return (refreshToken.IsSuccess, new UserData(), refreshToken.Data);
+        return (refreshToken.IsSuccess, new UserData().MapFromDomainUser(findedAccount), refreshToken.Data);
     }
 
     public async Task<bool> DeleteAsync(string id, CancellationToken ct = default)

@@ -2,6 +2,9 @@ using Aspire.Hosting.Yarp.Transforms;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+
+
+var minio = builder.AddMinioContainer("minio");
 var cache = builder.AddRedis("cache");
 var mongo = builder.AddMongoDB("mongodb", 3363)
     .AddDatabase("mainMongo", "main");
@@ -36,7 +39,21 @@ var tokenFactory =
         .WithEnvironment("JWTExpireMinutes", "15")
         .WithEnvironment("RefreshExpireDays", "30");
 
-
+var userContent =
+    builder.AddDockerfile("user-content", "..", "GhostCodeBackend.UserContentService/Dockerfile")
+        .WithHttpEndpoint(0000, 8444, "user-content")
+        .WithEnvironment("ASPNETCORE_HTTP_PORTS", "8444")
+        .WaitFor(mongo)
+        .WaitFor(cache)
+        .WaitFor(minio)
+        .WithReference(mongo, "mongodb")
+        .WithReference(cache, "redis")
+        .WithReference(minio, "minio")
+        .WithEnvironment("JWTAudience", "Audience")
+        .WithEnvironment("JWTIssuer", "Issuer")
+        .WithEnvironment("JWTKey", "SUPER_SECRET_256_BIT_KEY_AT_LEAST_32_CHARS")
+        .WithEnvironment("JWTExpireMinutes", "15")
+        .WithEnvironment("RefreshExpireDays", "30");
 
 
 gateway.WithConfiguration(yarp =>
@@ -45,10 +62,14 @@ gateway.WithConfiguration(yarp =>
         .WithTransformPathRemovePrefix("/api/accounts");
     
     yarp.AddRoute("/api/tokens/{**catch-all}", tokenFactory.GetEndpoint("token-factory"))
-        .WithTransformPathRemovePrefix("/api/tokens");;
+        .WithTransformPathRemovePrefix("/api/tokens");
+    
+    yarp.AddRoute("/api/content/{**catch-all}", userContent.GetEndpoint("user-content"))
+        .WithTransformPathRemovePrefix("/api/content");
 })
 .WaitFor(tokenFactory)
-.WaitFor(accountsManagementService);
+.WaitFor(accountsManagementService)
+.WaitFor(userContent);
 
 
 

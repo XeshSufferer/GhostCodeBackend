@@ -21,6 +21,7 @@
     <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="9.5.1" />
     <PackageReference Include="Aspire.Hosting.Redis" Version="9.5.1" />
     <PackageReference Include="Aspire.Hosting.Yarp" Version="9.5.1-preview.1.25502.11" />
+    <PackageReference Include="CommunityToolkit.Aspire.Hosting.Minio" Version="9.8.0" />
      
     <ProjectReference Include="../GhostCodeBackend.AccountsManagementService/GhostCodeBackend.AccountsManagementService.csproj" />
   </ItemGroup>

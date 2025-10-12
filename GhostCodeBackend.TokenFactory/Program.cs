@@ -8,7 +8,7 @@ using MongoDB.Driver;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using TokenFactory.CfgObjects;
+using Shared.CfgObjects;
 using TokenFactory.Repositories;
 using TokenFactory.Rpc;
 using TokenFactory.Services;

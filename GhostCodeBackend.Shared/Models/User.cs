@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using GhostCodeBackend.Shared.Models.Enums;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace GhostCodeBackend.Shared.Models;
@@ -11,4 +12,13 @@ public class User
     public string Login { get; set; }
     public string PasswordHash { get; set; }
     public string RecoveryCodeHash { get; set; }
+    public Role Role { get; set; } = Role.User;
+    public SubscriptionTier Tier { get; set; } = SubscriptionTier.None;
+    
+    // Customize
+    public string Description { get; set; } = "It's me!";
+    public string AvatarLink { get; set; } = "default";
+    public string HeaderLink { get; set; } = "default";
+    
+    
 }
