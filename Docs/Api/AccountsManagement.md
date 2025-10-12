@@ -63,8 +63,16 @@ P.S Да, он сейчас идентичен Register Request DTO, но это
 
   ```
     {
-      "recoveryCode": "string"
-      "refreshToken": "string"
+      "recoveryCode": "string",
+      "refreshToken": "string",
+      "data": {
+        "name": "string",
+        "role": "string",
+        "tier": "string",
+        "description": "string",
+        "avatarLink": "string",
+        "headerLink": "string"
+      },
     }
   ```
 
@@ -112,6 +120,29 @@ P.S Да, он сейчас идентичен Register Request DTO, но это
     "newRecovery": "string"
     }
   ```
+
+# GET /getData/{id} 
+
+Кешировано (10 минут после запроса храниться кеш). рейт-лимиты сняты
+
+Принимает id юзера для получения информации о нем. 
+
+ - 400 - Пользователь с указанным id не найден
+ - 200 - Пользователь найден, возвращает информацию о юзере. JSON ответ:
+
+ ```
+    {
+      "data": {
+        "name": "string",
+        "role": "string",
+        "tier": "string",
+        "description": "string",
+        "avatarLink": "string",
+        "headerLink": "string"
+      }
+    }
+  ```
+
 
 ===
 

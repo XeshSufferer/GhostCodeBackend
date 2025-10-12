@@ -4,7 +4,9 @@ using GhostCodeBackend.Shared.DTO.Requests;
 using GhostCodeBackend.Shared.Models;
 using GhostCodeBackend.Shared.RPC.MessageBroker;
 using GhostCodeBackend.Shared.RPC.Tracker;
+using GhostCodeBackend.Shared.Сache;
 using GhostCodeBakend.AccountsManagementService.Utils;
+using Microsoft.Extensions.Caching.Distributed;
 using MongoDB.Bson;
 
 namespace GhostCodeBakend.AccountsManagementService.Services;
@@ -17,18 +19,21 @@ public class AccountsService : IAccountsService
     private readonly IRandomWordGenerator _randomWordGenerator;
     private readonly IRabbitMQService _rabbit;
     private readonly IUniversalRequestTracker _tracker;
+    private readonly ICacheService _cache;
 
     public AccountsService(IAccountsRepository accounts, 
         IHasher hasher, 
         IRandomWordGenerator randomWordGenerator,
         IRabbitMQService rabbit,
-        IUniversalRequestTracker tracker)
+        IUniversalRequestTracker tracker,
+        ICacheService cache)
     {
         _accounts = accounts;
         _hasher = hasher;
         _randomWordGenerator = randomWordGenerator;
         _rabbit = rabbit;
         _tracker = tracker;
+        _cache = cache;
     }
     
     public async Task<(bool result, User userObj, string recoveryCode, string newRefresh)> RegisterAsync(RegisterRequestDTO req, CancellationToken ct = default)
@@ -93,5 +98,23 @@ public class AccountsService : IAccountsService
         user.RecoveryCodeHash = _hasher.Sha256(newRecoveryCode);
         bool results = await _accounts.UpdateUserAsync(user);
         return (results, newRecoveryCode);
+    }
+
+    public async Task<(bool result, UserData? data)> GetUserdata(string id, CancellationToken ct = default)
+    {
+        if (await _cache.ExistsAsync($"accountManagement:userdata:{id}"))
+        {
+            return (true, await _cache.GetAsync<UserData>($"accountManagement:userdata:{id}"));
+        }
+        
+        User? user = await _accounts.GetByIdUserAsync(id, ct);
+        if (user == null) return (false, null);
+
+        UserData data = new UserData().MapFromDomainUser(user);
+        
+        await _cache.SetAsync<UserData>($"accountManagement:userdata:{id}", data, TimeSpan.FromMinutes(10));
+        
+        
+        return (true, data);
     }
 }

@@ -11,4 +11,6 @@ public interface IAccountsService
 
     Task<(bool result, string newRecoveryCode)>  PasswordReset(string login, string recoveryCode, string newPassword,
         CancellationToken ct = default);
+
+    Task<(bool result, UserData? data)> GetUserdata(string id, CancellationToken ct = default);
 }

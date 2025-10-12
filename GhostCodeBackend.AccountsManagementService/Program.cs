@@ -1,8 +1,10 @@
 
 using GhostCodeBackend.AccountsManagementService.Repositories;
 using GhostCodeBackend.Shared.DTO.Requests;
+using GhostCodeBackend.Shared.Models;
 using GhostCodeBackend.Shared.RPC.MessageBroker;
 using GhostCodeBackend.Shared.RPC.Tracker;
+using GhostCodeBackend.Shared.Сache;
 using GhostCodeBakend.AccountsManagementService.Rpc;
 using GhostCodeBakend.AccountsManagementService.Services;
 using GhostCodeBakend.AccountsManagementService.Utils;
@@ -43,6 +45,7 @@ builder.Services.AddRateLimiter(opt =>
     
     opt.OnRejected = (ctx, ct) =>
     {
+        
         var ip = ctx.HttpContext.Connection.RemoteIpAddress?.ToString();
         IpBanMiddleware.Ban(ip, TimeSpan.FromMinutes(10));
         ctx.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
@@ -51,10 +54,14 @@ builder.Services.AddRateLimiter(opt =>
 });
 
 builder.AddRabbitMQClient("rabbitmq");
+builder.AddRedisDistributedCache("redis");
 
 // Utils
 builder.Services.AddSingleton<IHasher, Hasher>();
 builder.Services.AddSingleton<IRandomWordGenerator, RandomWordGenerator>();
+
+// Cache
+builder.Services.AddSingleton<ICacheService, RedisService>();
 
 // Repo&Services
 builder.Services.AddSingleton<IAccountsRepository, AccountsRepository>();
@@ -104,7 +111,8 @@ app.MapPost("/register", async (RegisterRequestDTO req, IAccountsService account
     return Results.Ok(new
     {
         recoveryCode = result.recoveryCode,
-        refreshToken = result.newRefresh
+        refreshToken = result.newRefresh,
+        data = new UserData().MapFromDomainUser(result.userObj)
     });
 }).RequireRateLimiting("per-ip");
 
@@ -130,7 +138,11 @@ app.MapPost("/recovery", async (AccountRecoveryRequestDTO req, IAccountsService 
     }) : Results.BadRequest("Password reset failed");
 }).RequireRateLimiting("per-ip");
 
-
-
+app.MapGet("/getData/{id}", async (string id, IAccountsService accounts) =>
+{
+    var data = await accounts.GetUserdata(id);
+    
+    return data.result ? Results.Ok(new { data = data.data }) : Results.BadRequest("User not found");
+});
 
 app.Run();
