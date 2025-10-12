@@ -1,0 +1,6 @@
+@GhostCodeBackend.PostManagement_HostAddress = http://localhost:5292
+
+GET {{GhostCodeBackend.PostManagement_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

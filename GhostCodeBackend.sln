@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhostCodeBackend.TokenFacto
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhostCodeBackend.UserContentService", "GhostCodeBackend.UserContentService\GhostCodeBackend.UserContentService.csproj", "{46BCB9D0-8610-47E2-8E92-06DFF61B7458}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhostCodeBackend.PostManagement", "GhostCodeBackend.PostManagement\GhostCodeBackend.PostManagement.csproj", "{F0E18E6C-0C6A-4F36-A11E-0DD7106A6D3D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{46BCB9D0-8610-47E2-8E92-06DFF61B7458}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46BCB9D0-8610-47E2-8E92-06DFF61B7458}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46BCB9D0-8610-47E2-8E92-06DFF61B7458}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F0E18E6C-0C6A-4F36-A11E-0DD7106A6D3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0E18E6C-0C6A-4F36-A11E-0DD7106A6D3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0E18E6C-0C6A-4F36-A11E-0DD7106A6D3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0E18E6C-0C6A-4F36-A11E-0DD7106A6D3D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using GhostCodeBackend.Shared.Сache;
 using GhostCodeBackend.UserContentService.Repositories;
 using GhostCodeBackend.UserContentService.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -8,6 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 using Minio;
 using Minio.DataModel.Args;
 using MongoDB.Driver;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using Shared.CfgObjects;
 
 
@@ -26,6 +29,8 @@ JwtOptions jwtOpt =
         Key = cfg["JWTKey"],
         ExpireMinutes = int.Parse(cfg["JWTExpireMinutes"])
     };
+
+builder.AddRedisDistributedCache("redis");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opt =>
@@ -54,7 +59,7 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
 builder.Services.AddSingleton<ILiteUserRepository, LiteUserRepository>();
 builder.Services.AddSingleton<IStorage, Storage>();
 builder.Services.AddScoped<ICustomizerService, CustomizerService>();
-
+builder.Services.AddSingleton<ICacheService, RedisService>();
 
 builder.WebHost.ConfigureKestrel(o =>
     o.Limits.MaxRequestBodySize = MAX_CONTENT_SIZE); 
@@ -99,12 +104,7 @@ builder.Services.AddRateLimiter(opt =>
 var app = builder.Build();
 
 app.UseMiddleware<IpBanMiddleware>();
-
-
 app.MapDefaultEndpoints();
-
-
-
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseCors("AllowFrontend");
@@ -128,8 +128,6 @@ foreach (var b in buckets)
     }
 }
 
-
-
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -140,7 +138,6 @@ app.MapGet("link/{bucket}/{*key}", async (
     HttpContext context,   
     IStorage storage) =>
 {
-
     await storage.Get(context, bucket.ToLower(), key.ToLower());
 });
 
@@ -153,12 +150,7 @@ app.MapPost("/uploadHeader", async (IFormFile file, ICustomizerService customize
 app.MapPost("/uploadAvatar", async (IFormFile file, ICustomizerService customizer, ClaimsPrincipal user) =>
 {
     var result = await customizer.SetAvatar(file, user.Identity.Name);
-    
-    
-    
     return result.result ? Results.Ok(new { link = result.filename }) : Results.BadRequest("Error uploading avatar");
 }).DisableAntiforgery().RequireAuthorization().RequireRateLimiting("per-ip");
-
-
 
 app.Run();

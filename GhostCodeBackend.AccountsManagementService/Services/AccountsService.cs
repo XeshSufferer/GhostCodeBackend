@@ -118,7 +118,7 @@ public class AccountsService : IAccountsService
 
         UserData data = new UserData().MapFromDomainUser(user);
         
-        await _cache.SetAsync<UserData>($"accountManagement:userdata:{id}", data, TimeSpan.FromMinutes(10));
+        await _cache.SetAsync<UserData>($"accountManagement:userdata:{id}", data, TimeSpan.FromHours(1));
         
         
         return (true, data);

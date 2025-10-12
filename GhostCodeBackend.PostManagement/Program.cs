@@ -1,35 +1,34 @@
 using System.Security.Claims;
 using System.Text;
+using GhostCodeBackend.PostManagement.Repositories;
+using GhostCodeBackend.PostManagement.Services;
 using GhostCodeBackend.Shared.DTO.Requests;
-using GhostCodeBackend.Shared.RPC.MessageBroker;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
-using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Shared.CfgObjects;
-using TokenFactory.Repositories;
-using TokenFactory.Rpc;
-using TokenFactory.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-IConfiguration cfg = builder.Configuration;
+builder.Services.AddOpenApi();
 
 
 
-builder.AddRabbitMQClient("rabbitmq");
+var cfg = builder.Configuration;
 
-builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
-builder.Services.AddSingleton<IRpcResponser, RpcResponser>();
 builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(cfg.GetConnectionString("mongodb")));
 builder.Services.AddSingleton<IMongoDatabase>(sp =>
 {
     var client = sp.GetRequiredService<IMongoClient>();
     return client.GetDatabase("main");
 });
+
+builder.Services.AddSingleton<IPostsRepository, PostsRepository>();
+builder.Services.AddScoped<IPostsService, PostsService>();
+
 
 JwtOptions jwtOpt = 
     new JwtOptions()
@@ -40,25 +39,10 @@ JwtOptions jwtOpt =
         ExpireMinutes = int.Parse(cfg["JWTExpireMinutes"])
     };
 
-builder.Services.AddSingleton<JwtOptions>(_ =>
-{
-    JwtOptions opt = new JwtOptions()
-    {
-        Audience = cfg["JWTAudience"],
-        Issuer = cfg["JWTIssuer"],
-        Key = cfg["JWTKey"],
-        ExpireMinutes = int.Parse(cfg["JWTExpireMinutes"])
-    };
-    return opt;
-});
 
-builder.Services.AddSingleton<IRefreshTokensRepository, RefreshTokensRepository>();
-builder.Services.AddScoped<IRefreshTokensService, RefreshTokensService>(
-    _ => new RefreshTokensService(_.GetRequiredService<IRefreshTokensRepository>(), 
-    int.Parse(cfg["RefreshExpireDays"])));
-builder.Services.AddScoped<IJwtService, JwtService>();
-
-
+builder.Services.AddAuthorization();
+builder.Services.AddAuthentication();
+builder.AddServiceDefaults();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opt =>
     {
@@ -74,12 +58,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-
 builder.Services.AddRateLimiter(opt =>
 {
     opt.AddFixedWindowLimiter("per-ip", config =>
     {
-        config.PermitLimit   = 5;          // сколько
+        config.PermitLimit   = 10;          // сколько
         config.Window        = TimeSpan.FromMinutes(1);
         config.QueueLimit    = 0;           // без очереди – сразу 429
         config.AutoReplenishment = true;
@@ -88,7 +71,7 @@ builder.Services.AddRateLimiter(opt =>
     opt.OnRejected = (ctx, ct) =>
     {
         var ip = ctx.HttpContext.Connection.RemoteIpAddress?.ToString();
-        IpBanMiddleware.Ban(ip, TimeSpan.FromHours(3));
+        IpBanMiddleware.Ban(ip, TimeSpan.FromMinutes(5));
         ctx.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
         return ValueTask.CompletedTask;
     };
@@ -105,46 +88,32 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddOpenApi();
-builder.Services.AddAuthorization();
-builder.AddServiceDefaults();
-
 var app = builder.Build();
 
+
 app.UseMiddleware<IpBanMiddleware>();
-
-
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseCors("AllowFrontend");
+app.UseRateLimiter();
+app.MapDefaultEndpoints();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
-app.UseAuthentication();
-app.UseAuthorization();
-app.UseRateLimiter();
-app.UseCors("AllowFrontend");
-app.MapDefaultEndpoints();
 
-await app.Services.GetRequiredService<IRabbitMQService>().InitializeAsync();
-await app.Services.GetRequiredService<IRpcResponser>().InitResponses();
-
-app.MapGet("/checkToken", () =>
+app.MapPost("/create", async (PostCreationRequestDTO req, IPostsService posts, ClaimsPrincipal user) =>
 {
-    return Results.Ok("valid");
+    var result = await posts.CreatePost(req, user);
+    return result.result ? Results.Ok(result.post) : Results.BadRequest("Post creation Failed");
 }).RequireAuthorization().RequireRateLimiting("per-ip");
 
-app.MapPost("/refresh", async (RefreshRequestDTO req, IJwtService jwtService) =>
+app.MapGet("/getPosts/{count}", async (int count, IPostsService posts) =>
 {
-    var result = await jwtService.CreateToken(req.Token);
-
-    return result.result
-        ? Results.Ok(new
-        {
-            newRefresh = result.newRefresh,
-            newJwt = result.newJwt
-        }) : Results.BadRequest("invalid refresh token");
-}).RequireRateLimiting("per-ip");
-
+    var result = await posts.GetPosts(count);
+    return result.result ? Results.Ok(new { posts = result.posts }) : Results.BadRequest("Post get Failed");
+}).RequireAuthorization().RequireRateLimiting("per-ip");
 
 app.Run();

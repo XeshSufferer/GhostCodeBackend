@@ -22,7 +22,9 @@ var accountsManagementService =
         .WaitFor(cache)
         .WithReference(mongo, "mongodb")
         .WithReference(cache, "redis")
-        .WithReference(rabbitmq, "rabbitmq");
+        .WithReference(rabbitmq, "rabbitmq")
+        .WithOtlpExporter()
+        .WithImageTag("dev");;
 
 var tokenFactory =
     builder.AddDockerfile("token-factory", "..", "GhostCodeBackend.TokenFactory/Dockerfile")
@@ -37,7 +39,9 @@ var tokenFactory =
         .WithEnvironment("JWTIssuer", "Issuer")
         .WithEnvironment("JWTKey", "SUPER_SECRET_256_BIT_KEY_AT_LEAST_32_CHARS")
         .WithEnvironment("JWTExpireMinutes", "15")
-        .WithEnvironment("RefreshExpireDays", "30");
+        .WithEnvironment("RefreshExpireDays", "30")
+        .WithOtlpExporter()
+        .WithImageTag("dev");;
 
 var userContent =
     builder.AddDockerfile("user-content", "..", "GhostCodeBackend.UserContentService/Dockerfile")
@@ -53,7 +57,26 @@ var userContent =
         .WithEnvironment("JWTIssuer", "Issuer")
         .WithEnvironment("JWTKey", "SUPER_SECRET_256_BIT_KEY_AT_LEAST_32_CHARS")
         .WithEnvironment("JWTExpireMinutes", "15")
-        .WithEnvironment("RefreshExpireDays", "30");
+        .WithEnvironment("RefreshExpireDays", "30")
+        .WithOtlpExporter()
+        .WithImageTag("dev");;
+
+var postManagemet = 
+    builder.AddDockerfile("post-management", "..", "GhostCodeBackend.PostManagement/Dockerfile")
+        .WithHttpEndpoint(0000, 8555, "post-management")
+        .WithEnvironment("ASPNETCORE_HTTP_PORTS", "8555")
+        .WaitFor(mongo)
+        .WaitFor(cache)
+        .WithReference(mongo, "mongodb")
+        .WithReference(cache, "redis")
+        .WithEnvironment("JWTAudience", "Audience")
+        .WithEnvironment("JWTIssuer", "Issuer")
+        .WithEnvironment("JWTKey", "SUPER_SECRET_256_BIT_KEY_AT_LEAST_32_CHARS")
+        .WithEnvironment("JWTExpireMinutes", "15")
+        .WithEnvironment("RefreshExpireDays", "30")
+        .WithOtlpExporter()
+        .WithImageTag("dev");;
+
 
 
 gateway.WithConfiguration(yarp =>
@@ -66,6 +89,9 @@ gateway.WithConfiguration(yarp =>
     
     yarp.AddRoute("/api/content/{**catch-all}", userContent.GetEndpoint("user-content"))
         .WithTransformPathRemovePrefix("/api/content");
+    
+    yarp.AddRoute("/api/posts/{**catch-all}", postManagemet.GetEndpoint("post-management"))
+        .WithTransformPathRemovePrefix("/api/posts");
 })
 .WaitFor(tokenFactory)
 .WaitFor(accountsManagementService)

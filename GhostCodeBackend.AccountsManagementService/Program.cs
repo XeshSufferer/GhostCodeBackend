@@ -17,10 +17,6 @@ using OpenTelemetry.Trace;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 
-builder.Services.AddOpenTelemetry()
-    .WithTracing(t => t.AddAspNetCoreInstrumentation())
-    .WithMetrics(m => m.AddAspNetCoreInstrumentation())
-    .UseOtlpExporter();
 
 builder.Services.AddCors(options =>
 {
