@@ -3,6 +3,7 @@ using System.Text;
 using GhostCodeBackend.PostManagement.Repositories;
 using GhostCodeBackend.PostManagement.Services;
 using GhostCodeBackend.Shared.DTO.Requests;
+using GhostCodeBackend.Shared.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
@@ -28,6 +29,10 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
 
 builder.Services.AddSingleton<IPostsRepository, PostsRepository>();
 builder.Services.AddScoped<IPostsService, PostsService>();
+builder.Services.AddSingleton<IColdCommentsRepository, ColdCommentsRepository>();
+builder.Services.AddSingleton<IColdLikesRepository, ColdLikesRepository>();
+builder.Services.AddScoped<ILikeService, LikeService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 
 
 JwtOptions jwtOpt = 
@@ -62,7 +67,7 @@ builder.Services.AddRateLimiter(opt =>
 {
     opt.AddFixedWindowLimiter("per-ip", config =>
     {
-        config.PermitLimit   = 10;          // сколько
+        config.PermitLimit   = 20;          // сколько
         config.Window        = TimeSpan.FromMinutes(1);
         config.QueueLimit    = 0;           // без очереди – сразу 429
         config.AutoReplenishment = true;
@@ -114,6 +119,28 @@ app.MapGet("/getPosts/{count}", async (int count, IPostsService posts) =>
 {
     var result = await posts.GetPosts(count);
     return result.result ? Results.Ok(new { posts = result.posts }) : Results.BadRequest("Post get Failed");
+}).RequireAuthorization().RequireRateLimiting("per-ip");
+
+app.MapPost("/likePost", async (LikePostRequestDTO req, ClaimsPrincipal user, ILikeService likeService) =>
+{
+    var result = await likeService.Like(req.PostId, user.Identity.Name);
+    
+    return result ? Results.Ok() : Results.BadRequest("Like Failed");
+}).RequireAuthorization().RequireRateLimiting("per-ip");
+
+app.MapPost("/commentPost", async (ClaimsPrincipal user, CommentPostRequestDTO req, ICommentService commentService) =>
+{
+    
+    var comment = new Comment()
+    {
+        AuthorId = user.Identity.Name,
+        Content = req.Content,
+        CreatedAt = DateTime.UtcNow,
+    };
+    
+    var result = await commentService.WriteComment(req.PostId, comment);
+    
+    return result ? Results.Ok() : Results.BadRequest("Comment Failed");
 }).RequireAuthorization().RequireRateLimiting("per-ip");
 
 app.Run();

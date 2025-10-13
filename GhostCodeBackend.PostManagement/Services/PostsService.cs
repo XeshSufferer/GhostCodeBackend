@@ -38,9 +38,7 @@ public class PostsService : IPostsService
 
     public async Task<(bool result, List<Post?>? posts)> GetPosts(int count, CancellationToken ct = default)
     {
-        
         if(count > _maxPostsPerRequest) return (false, null);
-        
         return await _posts.GetLastPostsAsync(count);
     }
 }

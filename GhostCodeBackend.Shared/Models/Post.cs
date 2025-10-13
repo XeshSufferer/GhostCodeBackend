@@ -12,5 +12,12 @@ public class Post
     public string Title { get; set; }
     public string Body { get; set; }
     public DateTime CreatedAt { get; set; }
+    public long CommentsCount { get; set; }
+    public long LikesCount { get; set; }
     
+    public int CommentChunkedCount { get; set; }
+    public int LikesChunkedCount { get; set; }
+    
+    public List<LikeSegment> LikerSegments { get; set; } = new();
+    public List<Comment> Comments { get; set; } = new();
 }
