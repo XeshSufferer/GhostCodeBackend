@@ -41,4 +41,9 @@ public class PostsService : IPostsService
         if(count > _maxPostsPerRequest) return (false, null);
         return await _posts.GetLastPostsAsync(count);
     }
+
+    public async Task<(bool result, List<Comment> comments)> GetPostCommentsByChunk(string postId, int chunkId, CancellationToken ct = default)
+    {
+        return await _posts.GetCommentChunk(postId, chunkId, ct);
+    }
 }

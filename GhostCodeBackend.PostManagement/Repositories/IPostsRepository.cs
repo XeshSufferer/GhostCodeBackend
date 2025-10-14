@@ -13,4 +13,12 @@ public interface IPostsRepository
     Task<bool> AddCommentToPostAsync(string postid, Comment comment, CancellationToken ct = default);
     Task<bool> UpdatePostAsync(string postid, Post post, CancellationToken ct = default);
     Task<(bool result, Post? post)> GetPostAsync(string postid, CancellationToken ct = default);
+
+    Task<(bool result, List<Comment> comments)> GetCommentChunk(string postId, int chunkIndex,
+        CancellationToken ct = default);
+
+    Task<bool> AddCommentsToCold(string postId, int lastChunkIndex, List<Comment> comments);
+    Task<bool> Like(string postid, string likerid, CancellationToken ct = default);
+    Task<bool> AddLikesToCold(string postId, int lastChunkIndex, List<LikeSegment> segments);
+    Task<bool> PostIsLikedByUser(string postId, string userId, CancellationToken ct = default);
 }

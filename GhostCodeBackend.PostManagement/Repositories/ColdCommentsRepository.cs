@@ -9,12 +9,12 @@ public class ColdCommentsRepository : IColdCommentsRepository
     private readonly IMongoCollection<CommentsChunk> _coldStorage;
     
     
-    public ColdCommentsRepository(IMongoDatabase db)
+    /*public ColdCommentsRepository(IMongoDatabase db)
     {
         _db = db;
         db.CreateCollection("cold_comments");
         _coldStorage = _db.GetCollection<CommentsChunk>("cold_comments");
-    }
+    }*/
 
     public async Task<(bool result, List<Comment> comments)> GetOldComments(string postId, int count, CancellationToken ct = default)
     {

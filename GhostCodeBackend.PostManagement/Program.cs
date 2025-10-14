@@ -4,6 +4,7 @@ using GhostCodeBackend.PostManagement.Repositories;
 using GhostCodeBackend.PostManagement.Services;
 using GhostCodeBackend.Shared.DTO.Requests;
 using GhostCodeBackend.Shared.Models;
+using GhostCodeBackend.Shared.Сache;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
@@ -20,6 +21,9 @@ builder.Services.AddOpenApi();
 
 var cfg = builder.Configuration;
 
+builder.AddRedisDistributedCache("redis");
+
+builder.Services.AddSingleton<ICacheService, RedisService>();
 builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(cfg.GetConnectionString("mongodb")));
 builder.Services.AddSingleton<IMongoDatabase>(sp =>
 {
@@ -141,6 +145,13 @@ app.MapPost("/commentPost", async (ClaimsPrincipal user, CommentPostRequestDTO r
     var result = await commentService.WriteComment(req.PostId, comment);
     
     return result ? Results.Ok() : Results.BadRequest("Comment Failed");
+}).RequireAuthorization().RequireRateLimiting("per-ip");
+
+app.MapGet("/getComments/{postid}/chunk/{chunkid}", async (IPostsService posts, string postid, string chunkid) =>
+{
+    if(!int.TryParse(chunkid, out int parsedChunkId)) return Results.BadRequest("Chunk ID is invalid");
+    var result = await posts.GetPostCommentsByChunk(postid, parsedChunkId);
+    return result.result ? Results.Ok(result.comments) : Results.BadRequest("Post or chunk not found");
 }).RequireAuthorization().RequireRateLimiting("per-ip");
 
 app.Run();

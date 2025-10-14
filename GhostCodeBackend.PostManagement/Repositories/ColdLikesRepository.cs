@@ -12,13 +12,13 @@ public class ColdLikesRepository : IColdLikesRepository
     
     private readonly IPostsRepository _posts;
     
-    public ColdLikesRepository(IMongoDatabase db, IPostsRepository posts)
+    /*public ColdLikesRepository(IMongoDatabase db, IPostsRepository posts)
     {
         _posts = posts;
         _db = db;
         db.CreateCollection("cold_likes");
         _coldStorage = _db.GetCollection<LikeChunk>("cold_likes");
-    }
+    }*/
 
     public async Task<bool> Like(string postid, string likerid, CancellationToken ct = default)
     {

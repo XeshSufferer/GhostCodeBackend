@@ -14,6 +14,8 @@ public class Post
     public DateTime CreatedAt { get; set; }
     public long CommentsCount { get; set; }
     public long LikesCount { get; set; }
+    public int CommentsLastChunkIndex { get; set; }
+    public int LikesLastChunkIndex { get; set; }
     
     public int CommentChunkedCount { get; set; }
     public int LikesChunkedCount { get; set; }

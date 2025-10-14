@@ -5,15 +5,15 @@ namespace GhostCodeBackend.PostManagement.Services;
 public class LikeService : ILikeService
 {
 
-    private readonly IColdLikesRepository _coldLikesRepository;
+    private readonly IPostsRepository _posts;
     
-    public LikeService(IColdLikesRepository coldLikesRepository)
+    public LikeService(IPostsRepository posts)
     {
-        _coldLikesRepository = coldLikesRepository;
+        _posts = posts;
     }
 
     public async Task<bool> Like(string postId, string userId, CancellationToken ct = default)
     {
-        return await _coldLikesRepository.Like(postId, userId, ct);
+        return await _posts.Like(postId, userId, ct);
     }
 }
