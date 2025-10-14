@@ -88,15 +88,11 @@ public class PostsRepository : IPostsRepository
             var post = await _posts.AsQueryable().Where(p => p.Id == postid).FirstOrDefaultAsync();
             post.Comments.Add(comment);
             post.CommentsCount++;
-            Console.WriteLine("Comment added");
             if (post.Comments.Count > _commentsCacheLimit)
             {
-                Console.WriteLine("Cache hit");
                 var result = await AddCommentsToCold(post.Id, post.CommentsLastChunkIndex, post.Comments);
-                Console.WriteLine("Cache hit x2/ try add to cold");
                 if (result)
                 {
-                    Console.WriteLine("Data added to cold and clear from cache");
                     post.CommentsLastChunkIndex++;
                     post.Comments.Clear();
                 }
@@ -153,12 +149,6 @@ public class PostsRepository : IPostsRepository
 
     public async Task<bool> AddCommentsToCold(string postId, int lastChunkIndex, List<Comment> comments)
     {
-        
-        Console.WriteLine("Try add comments to cold");
-        Console.WriteLine($"Last chunk index: {lastChunkIndex}");
-        Console.WriteLine($"Chunk index: {lastChunkIndex}");
-        Console.WriteLine($"Post id: {postId}");
-        Console.WriteLine($"Comments count: {comments.Count}");
         var chunk = new CommentsChunk()
         {
             PostId = postId,

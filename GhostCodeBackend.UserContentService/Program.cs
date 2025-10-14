@@ -19,7 +19,8 @@ const long MAX_CONTENT_SIZE = 10L /* cuz 10 MB */ * 1024 * 1024;
 var builder = WebApplication.CreateBuilder(args);
 var cfg = builder.Configuration;
 
-
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 JwtOptions jwtOpt = 
     new JwtOptions()
@@ -66,7 +67,6 @@ builder.WebHost.ConfigureKestrel(o =>
 
 builder.AddServiceDefaults();
 builder.Services.AddAuthorization();
-builder.Services.AddOpenApi();
 
 builder.AddMinioClient("minio");
 
@@ -110,7 +110,8 @@ app.UseAuthorization();
 app.UseCors("AllowFrontend");
 app.UseRateLimiter();
 
-
+app.UseSwagger();
+app.UseSwaggerUI();
 
 var minio = app.Services.GetRequiredService<IMinioClient>();
 var buckets = new[] { "avatars", "headers" };
@@ -132,6 +133,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+
 
 app.MapGet("link/{bucket}/{*key}", async (
     string bucket, string key,

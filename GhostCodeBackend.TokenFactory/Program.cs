@@ -18,7 +18,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 IConfiguration cfg = builder.Configuration;
 
-
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 builder.AddRabbitMQClient("rabbitmq");
 
@@ -113,7 +114,8 @@ var app = builder.Build();
 
 app.UseMiddleware<IpBanMiddleware>();
 
-
+app.UseSwagger();
+app.UseSwaggerUI();
 
 if (app.Environment.IsDevelopment())
 {

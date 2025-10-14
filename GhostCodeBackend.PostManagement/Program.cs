@@ -17,7 +17,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
-
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var cfg = builder.Configuration;
 
@@ -97,8 +98,8 @@ builder.Services.AddCors(options =>
     });
 });
 
-var app = builder.Build();
 
+var app = builder.Build();
 
 app.UseMiddleware<IpBanMiddleware>();
 app.UseAuthentication();
@@ -112,6 +113,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.MapPost("/create", async (PostCreationRequestDTO req, IPostsService posts, ClaimsPrincipal user) =>
 {
