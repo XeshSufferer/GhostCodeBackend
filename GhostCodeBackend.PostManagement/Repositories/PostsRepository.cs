@@ -185,8 +185,21 @@ public class PostsRepository : IPostsRepository
         if (await PostIsLikedByUser(postid, likerid, ct))
         {
             
-            post.post.LikerSegments.Remove(segment);
-            post.post.LikesCount--;
+            bool result = post.post.LikerSegments.Remove(segment);
+            if (result)
+            {
+                for (int i = 0; i != post.post.LikesLastChunkIndex; i++)
+                {
+                    var chunk = await _coldLikes.AsQueryable().Where(c => c.PostId == postid && c.ChunkIndex == i).FirstOrDefaultAsync(ct);
+
+                    if (chunk.Users.ToList().Remove(likerid))
+                    {
+                        post.post.LikesCount--;
+                        var opts = new ReplaceOptions { IsUpsert = false };
+                        await _coldLikes.ReplaceOneAsync(c => c.Id == chunk.Id, chunk, opts, ct);
+                    }
+                }
+            }
         }
         else
         {
