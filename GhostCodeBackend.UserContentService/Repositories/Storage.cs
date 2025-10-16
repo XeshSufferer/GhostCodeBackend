@@ -14,52 +14,36 @@ public class Storage : IStorage
     }
     
     
-    public async Task<(bool result, string imageid)> Upload(IFormFile file, string bucket)
+    public async Task<(bool result, string imageid)> Upload(MemoryStream file, string bucket)
     {
-        Console.WriteLine($"=== Storage.Upload START ===");
-        Console.WriteLine($"Bucket: {bucket}");
-        Console.WriteLine($"File Name: {file.FileName}");
-        Console.WriteLine($"File Size: {file.Length}");
-        Console.WriteLine($"Content Type: {file.ContentType}");
 
         try
         {
             string imageId = Guid.NewGuid().ToString();
-            Console.WriteLine($"Generated ImageID: {imageId}");
 
-            await using var stream = file.OpenReadStream();
-            Console.WriteLine($"Stream opened successfully. Length: {stream.Length}");
+            await using var stream = file;
 
             var put = new PutObjectArgs()
                 .WithBucket(bucket)
                 .WithObject(imageId)
                 .WithStreamData(stream)
                 .WithObjectSize(stream.Length)
-                .WithContentType(file.ContentType);
+                .WithContentType("image/jpeg");
 
-            Console.WriteLine($"Attempting to upload to MinIO...");
-            Console.WriteLine($"Bucket: {bucket}");
-            Console.WriteLine($"Object: {imageId}");
-            Console.WriteLine($"Object Size: {stream.Length}");
 
             await _minio.PutObjectAsync(put);
-        
-            Console.WriteLine($"✅ MinIO upload successful");
-            Console.WriteLine($"=== Storage.Upload END ===\n");
+            
         
             return (true, imageId);
         }
         catch (Exception e)
         {
-            Console.WriteLine($"❌ MinIO UPLOAD ERROR: {e.Message}");
-            Console.WriteLine($"Stack Trace: {e.StackTrace}");
         
             if (e.InnerException != null)
             {
                 Console.WriteLine($"Inner Exception: {e.InnerException.Message}");
             }
-        
-            Console.WriteLine($"=== Storage.Upload END ===\n");
+
             return (false, "");
         }
     }
@@ -76,5 +60,22 @@ public class Storage : IStorage
                 {
                     await stream.CopyToAsync(ctx.Response.Body);
                 }));
+    }
+
+    public async Task<bool> Delete(string bucket, string key)
+    {
+        try
+        {
+            var del = new RemoveObjectArgs()
+                .WithBucket(bucket)
+                .WithObject(key);
+        
+            await _minio.RemoveObjectAsync(del);
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
     }
 }

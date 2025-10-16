@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using GhostCodeBackend.Shared.Сache;
+using GhostCodeBackend.UserContentService.Helpers;
 using GhostCodeBackend.UserContentService.Repositories;
 using GhostCodeBackend.UserContentService.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -57,6 +58,7 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
     return client.GetDatabase("main");
 });
 
+builder.Services.AddSingleton<IImageCompresser, ImageCompresser>();
 builder.Services.AddSingleton<ILiteUserRepository, LiteUserRepository>();
 builder.Services.AddSingleton<IStorage, Storage>();
 builder.Services.AddScoped<ICustomizerService, CustomizerService>();
