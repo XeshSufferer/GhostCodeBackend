@@ -1,6 +1,7 @@
 using GhostCodeBackend.UserContentService.OptionsObj;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.Processing;
 
 namespace GhostCodeBackend.UserContentService.Helpers;
@@ -24,7 +25,7 @@ public class ImageCompresser : IImageCompresser
         while (quality >= 40)
         {
             outStream.SetLength(0);
-            await img.SaveAsync(outStream, new JpegEncoder{Quality = quality});
+            await img.SaveAsync(outStream, new WebpEncoder{Quality = quality});
             if (outStream.Length <= cfg.TargetFileSize) break;
             quality -= 5;
         }
