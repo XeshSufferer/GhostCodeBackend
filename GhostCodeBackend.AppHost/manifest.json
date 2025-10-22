@@ -1,0 +1,327 @@
+{
+  "$schema": "https://json.schemastore.org/aspire-8.0.json",
+  "resources": {
+    "minio": {
+      "type": "container.v0",
+      "connectionString": "Endpoint=http://{minio.bindings.http.host}:{minio.bindings.http.port};AccessKey={user.value};SecretKey={minio-rootPassword.value}",
+      "image": "docker.io/minio/minio:RELEASE.2025-04-22T22-12-26Z",
+      "args": [
+        "server",
+        "/data",
+        "--console-address",
+        ":9001"
+      ],
+      "env": {
+        "MINIO_ROOT_USER": "{user.value}",
+        "MINIO_ROOT_PASSWORD": "{minio-rootPassword.value}"
+      },
+      "bindings": {
+        "http": {
+          "scheme": "http",
+          "protocol": "tcp",
+          "transport": "http",
+          "targetPort": 9000
+        },
+        "console": {
+          "scheme": "http",
+          "protocol": "tcp",
+          "transport": "http",
+          "targetPort": 9001
+        }
+      }
+    },
+    "cache": {
+      "type": "container.v0",
+      "connectionString": "{cache.bindings.tcp.host}:{cache.bindings.tcp.port},password={cache-password.value}",
+      "image": "docker.io/library/redis:8.2",
+      "entrypoint": "/bin/sh",
+      "args": [
+        "-c",
+        "redis-server --requirepass $REDIS_PASSWORD"
+      ],
+      "env": {
+        "REDIS_PASSWORD": "{cache-password.value}"
+      },
+      "bindings": {
+        "tcp": {
+          "scheme": "tcp",
+          "protocol": "tcp",
+          "transport": "tcp",
+          "targetPort": 6379
+        }
+      }
+    },
+    "mongodb": {
+      "type": "container.v0",
+      "connectionString": "mongodb://admin:{mongodb-password.value}@{mongodb.bindings.tcp.host}:{mongodb.bindings.tcp.port}?authSource=admin\u0026authMechanism=SCRAM-SHA-256",
+      "image": "docker.io/library/mongo:8.0",
+      "env": {
+        "MONGO_INITDB_ROOT_USERNAME": "admin",
+        "MONGO_INITDB_ROOT_PASSWORD": "{mongodb-password.value}"
+      },
+      "bindings": {
+        "tcp": {
+          "scheme": "tcp",
+          "protocol": "tcp",
+          "transport": "tcp",
+          "port": 3363,
+          "targetPort": 27017
+        }
+      }
+    },
+    "mainMongo": {
+      "type": "value.v0",
+      "connectionString": "mongodb://admin:{mongodb-password.value}@{mongodb.bindings.tcp.host}:{mongodb.bindings.tcp.port}/main?authSource=admin\u0026authMechanism=SCRAM-SHA-256"
+    },
+    "gateway": {
+      "type": "container.v0",
+      "image": "mcr.microsoft.com/dotnet/nightly/yarp:2.3.0-preview.4",
+      "entrypoint": "dotnet",
+      "args": [
+        "/app/yarp.dll"
+      ],
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "services__account-management__accounts-http__0": "{account-management.bindings.accounts-http.url}",
+        "REVERSEPROXY__ROUTES__route0__MATCH__PATH": "/api/accounts/{**catch-all}",
+        "REVERSEPROXY__ROUTES__route0__CLUSTERID": "cluster_account-management",
+        "REVERSEPROXY__ROUTES__route0__TRANSFORMS__0__PathRemovePrefix": "/api/accounts",
+        "REVERSEPROXY__ROUTES__route1__MATCH__PATH": "/api/tokens/{**catch-all}",
+        "REVERSEPROXY__ROUTES__route1__CLUSTERID": "cluster_token-factory",
+        "REVERSEPROXY__ROUTES__route1__TRANSFORMS__0__PathRemovePrefix": "/api/tokens",
+        "REVERSEPROXY__ROUTES__route2__MATCH__PATH": "/api/content/{**catch-all}",
+        "REVERSEPROXY__ROUTES__route2__CLUSTERID": "cluster_user-content",
+        "REVERSEPROXY__ROUTES__route2__TRANSFORMS__0__PathRemovePrefix": "/api/content",
+        "REVERSEPROXY__ROUTES__route3__MATCH__PATH": "/api/posts/{**catch-all}",
+        "REVERSEPROXY__ROUTES__route3__CLUSTERID": "cluster_post-management",
+        "REVERSEPROXY__ROUTES__route3__TRANSFORMS__0__PathRemovePrefix": "/api/posts",
+        "REVERSEPROXY__CLUSTERS__cluster_account-management__DESTINATIONS__destination1__ADDRESS": "http://_accounts-http.account-management",
+        "REVERSEPROXY__CLUSTERS__cluster_token-factory__DESTINATIONS__destination1__ADDRESS": "http://_token-factory.token-factory",
+        "REVERSEPROXY__CLUSTERS__cluster_user-content__DESTINATIONS__destination1__ADDRESS": "http://_user-content.user-content",
+        "REVERSEPROXY__CLUSTERS__cluster_post-management__DESTINATIONS__destination1__ADDRESS": "http://_post-management.post-management",
+        "services__token-factory__token-factory__0": "{token-factory.bindings.token-factory.url}",
+        "services__user-content__user-content__0": "{user-content.bindings.user-content.url}",
+        "services__post-management__post-management__0": "{post-management.bindings.post-management.url}"
+      },
+      "bindings": {
+        "http": {
+          "scheme": "http",
+          "protocol": "tcp",
+          "transport": "http",
+          "port": 8080,
+          "targetPort": 5000
+        }
+      }
+    },
+    "rabbitmq": {
+      "type": "container.v0",
+      "connectionString": "amqp://guest:{rabbitmq-password.value}@{rabbitmq.bindings.tcp.host}:{rabbitmq.bindings.tcp.port}",
+      "image": "docker.io/library/rabbitmq:4.1",
+      "env": {
+        "RABBITMQ_DEFAULT_USER": "guest",
+        "RABBITMQ_DEFAULT_PASS": "{rabbitmq-password.value}"
+      },
+      "bindings": {
+        "tcp": {
+          "scheme": "tcp",
+          "protocol": "tcp",
+          "transport": "tcp",
+          "targetPort": 5672
+        }
+      }
+    },
+    "account-management": {
+      "type": "container.v1",
+      "build": {
+        "context": "..",
+        "dockerfile": "../GhostCodeBackend.AccountsManagementService/Dockerfile"
+      },
+      "env": {
+        "ASPNETCORE_HTTP_PORTS": "8333",
+        "ConnectionStrings__mongodb": "{mainMongo.connectionString}",
+        "ConnectionStrings__redis": "{cache.connectionString}",
+        "ConnectionStrings__rabbitmq": "{rabbitmq.connectionString}"
+      },
+      "bindings": {
+        "accounts-http": {
+          "scheme": "http",
+          "protocol": "tcp",
+          "transport": "http",
+          "port": 0,
+          "targetPort": 8333
+        }
+      }
+    },
+    "token-factory": {
+      "type": "container.v1",
+      "build": {
+        "context": "..",
+        "dockerfile": "../GhostCodeBackend.TokenFactory/Dockerfile"
+      },
+      "env": {
+        "ASPNETCORE_HTTP_PORTS": "8222",
+        "ConnectionStrings__mongodb": "{mainMongo.connectionString}",
+        "ConnectionStrings__redis": "{cache.connectionString}",
+        "ConnectionStrings__rabbitmq": "{rabbitmq.connectionString}",
+        "JWTAudience": "Audience",
+        "JWTIssuer": "Issuer",
+        "JWTKey": "SUPER_SECRET_256_BIT_KEY_AT_LEAST_32_CHARS",
+        "JWTExpireMinutes": "15",
+        "RefreshExpireDays": "30"
+      },
+      "bindings": {
+        "token-factory": {
+          "scheme": "http",
+          "protocol": "tcp",
+          "transport": "http",
+          "port": 0,
+          "targetPort": 8222
+        }
+      }
+    },
+    "user-content": {
+      "type": "container.v1",
+      "build": {
+        "context": "..",
+        "dockerfile": "../GhostCodeBackend.UserContentService/Dockerfile"
+      },
+      "env": {
+        "ASPNETCORE_HTTP_PORTS": "8444",
+        "ConnectionStrings__mongodb": "{mainMongo.connectionString}",
+        "ConnectionStrings__redis": "{cache.connectionString}",
+        "ConnectionStrings__minio": "{minio.connectionString}",
+        "JWTAudience": "Audience",
+        "JWTIssuer": "Issuer",
+        "JWTKey": "SUPER_SECRET_256_BIT_KEY_AT_LEAST_32_CHARS",
+        "JWTExpireMinutes": "15",
+        "RefreshExpireDays": "30"
+      },
+      "bindings": {
+        "user-content": {
+          "scheme": "http",
+          "protocol": "tcp",
+          "transport": "http",
+          "port": 0,
+          "targetPort": 8444
+        }
+      }
+    },
+    "post-management": {
+      "type": "container.v1",
+      "build": {
+        "context": "..",
+        "dockerfile": "../GhostCodeBackend.PostManagement/Dockerfile"
+      },
+      "env": {
+        "ASPNETCORE_HTTP_PORTS": "8555",
+        "ConnectionStrings__mongodb": "{mainMongo.connectionString}",
+        "ConnectionStrings__redis": "{cache.connectionString}",
+        "JWTAudience": "Audience",
+        "JWTIssuer": "Issuer",
+        "JWTKey": "SUPER_SECRET_256_BIT_KEY_AT_LEAST_32_CHARS",
+        "JWTExpireMinutes": "15",
+        "RefreshExpireDays": "30"
+      },
+      "bindings": {
+        "post-management": {
+          "scheme": "http",
+          "protocol": "tcp",
+          "transport": "http",
+          "port": 0,
+          "targetPort": 8555
+        }
+      }
+    },
+    "post-search": {
+      "type": "container.v1",
+      "build": {
+        "context": "..",
+        "dockerfile": "../GhostCodeBackend.PostSearchingService/Dockerfile"
+      },
+      "env": {
+        "ASPNETCORE_HTTP_PORTS": "8777"
+      },
+      "bindings": {
+        "post-search": {
+          "scheme": "http",
+          "protocol": "tcp",
+          "transport": "http",
+          "port": 0,
+          "targetPort": 8777
+        }
+      }
+    },
+    "user": {
+      "type": "parameter.v0",
+      "value": "{user.inputs.value}",
+      "inputs": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "minio-rootPassword": {
+      "type": "parameter.v0",
+      "value": "{minio-rootPassword.inputs.value}",
+      "inputs": {
+        "value": {
+          "type": "string",
+          "secret": true,
+          "default": {
+            "generate": {
+              "minLength": 22
+            }
+          }
+        }
+      }
+    },
+    "cache-password": {
+      "type": "parameter.v0",
+      "value": "{cache-password.inputs.value}",
+      "inputs": {
+        "value": {
+          "type": "string",
+          "secret": true,
+          "default": {
+            "generate": {
+              "minLength": 22,
+              "special": false
+            }
+          }
+        }
+      }
+    },
+    "mongodb-password": {
+      "type": "parameter.v0",
+      "value": "{mongodb-password.inputs.value}",
+      "inputs": {
+        "value": {
+          "type": "string",
+          "secret": true,
+          "default": {
+            "generate": {
+              "minLength": 22,
+              "special": false
+            }
+          }
+        }
+      }
+    },
+    "rabbitmq-password": {
+      "type": "parameter.v0",
+      "value": "{rabbitmq-password.inputs.value}",
+      "inputs": {
+        "value": {
+          "type": "string",
+          "secret": true,
+          "default": {
+            "generate": {
+              "minLength": 22,
+              "special": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

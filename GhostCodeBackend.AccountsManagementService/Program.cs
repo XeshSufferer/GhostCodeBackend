@@ -1,5 +1,6 @@
 
 using GhostCodeBackend.AccountsManagementService.Repositories;
+using GhostCodeBackend.Shared.DTO.Interservice;
 using GhostCodeBackend.Shared.DTO.Requests;
 using GhostCodeBackend.Shared.Models;
 using GhostCodeBackend.Shared.RPC.MessageBroker;
@@ -104,11 +105,19 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.MapPost("/register", async (RegisterRequestDTO req, IAccountsService accounts) =>
+app.MapPost("/register", async (RegisterRequestDTO req, IAccountsService accounts, IRabbitMQService rabbit) =>
 {
     var result = await accounts.RegisterAsync(req);
     
     if(!result.result) return Results.BadRequest("Account registration failed");
+    
+    var msg = new Message<RegisterRequestDTO>()
+    {
+        Data = req
+    };
+    
+    await rabbit.SendMessageAsync(msg, "GitUsage.CreateAccount");
+    
     
     return Results.Ok(new
     {

@@ -18,6 +18,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhostCodeBackend.PostManage
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhostCodeBackend.PromoCodeService", "GhostCodeBackend.PromoCodeService\GhostCodeBackend.PromoCodeService.csproj", "{F621DEE4-69E9-4367-8B40-2128D76F8851}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhostCodeBackend.PostSearchingService", "GhostCodeBackend.PostSearchingService\GhostCodeBackend.PostSearchingService.csproj", "{2E8C3816-B063-4D05-B4F8-7A854C87A632}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhostCodeBackend.GitUsageService", "GhostCodeBackend.GitUsageService\GhostCodeBackend.GitUsageService.csproj", "{5A976CD6-1E06-4ACB-9A3E-DC23E9CD0284}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +60,14 @@ Global
 		{F621DEE4-69E9-4367-8B40-2128D76F8851}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F621DEE4-69E9-4367-8B40-2128D76F8851}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F621DEE4-69E9-4367-8B40-2128D76F8851}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E8C3816-B063-4D05-B4F8-7A854C87A632}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E8C3816-B063-4D05-B4F8-7A854C87A632}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E8C3816-B063-4D05-B4F8-7A854C87A632}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E8C3816-B063-4D05-B4F8-7A854C87A632}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A976CD6-1E06-4ACB-9A3E-DC23E9CD0284}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A976CD6-1E06-4ACB-9A3E-DC23E9CD0284}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A976CD6-1E06-4ACB-9A3E-DC23E9CD0284}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A976CD6-1E06-4ACB-9A3E-DC23E9CD0284}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,6 @@
+@GhostCodeBackend.GitUsageService_HostAddress = http://localhost:5104
+
+GET {{GhostCodeBackend.GitUsageService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

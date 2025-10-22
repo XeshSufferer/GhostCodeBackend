@@ -1,0 +1,13 @@
+{
+  "TemplatePath": "/home/byxesh/RiderProjects/GhostCodeBackend/GhostCodeBackend/dsa",
+  "ContainerSettings": {
+    "Registry": "k3d-local.registry:6000",
+    "RepositoryPrefix": ".",
+    "Tags": [
+      "latest"
+    ],
+    "Builder": "docker",
+    "BuildArgs": null,
+    "Context": null
+  }
+}

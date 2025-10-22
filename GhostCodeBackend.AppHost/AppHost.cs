@@ -10,9 +10,19 @@ var mongo = builder.AddMongoDB("mongodb", 3363)
     .AddDatabase("mainMongo", "main");
 
 
+var gitea = builder.AddContainer("gitea", "gitea/gitea:1.22-rootless")
+    .WithHttpEndpoint(3000, 3000, "gitea-http")
+    .WithEnvironment("GITEA__service__DISABLE_REGISTRATION", "true")
+    .WithEnvironment("GITEA__security__DISABLE_PASSWORD_CHANGE", "true")
+    .WithEnvironment("GITEA__server__ROOT_URL",
+        "http://localhost:3000/")
+    .WithVolume("/repos");
+
 
 var gateway = builder.AddYarp("gateway").WithHostPort(8080);
 var rabbitmq = builder.AddRabbitMQ("rabbitmq");
+
+
 
 var accountsManagementService =
     builder.AddDockerfile("account-management", "..", "GhostCodeBackend.AccountsManagementService/Dockerfile")
@@ -24,7 +34,7 @@ var accountsManagementService =
         .WithReference(cache, "redis")
         .WithReference(rabbitmq, "rabbitmq")
         .WithOtlpExporter()
-        .WithImageTag("dev");;
+        .WithImageTag("dev");
 
 var tokenFactory =
     builder.AddDockerfile("token-factory", "..", "GhostCodeBackend.TokenFactory/Dockerfile")
@@ -75,8 +85,19 @@ var postManagemet =
         .WithEnvironment("JWTExpireMinutes", "15")
         .WithEnvironment("RefreshExpireDays", "30")
         .WithOtlpExporter()
-        .WithImageTag("dev");;
+        .WithImageTag("dev");
 
+var gitUsage = builder.AddDockerfile("git-usage-management", "..", "GhostCodeBackend.GitUsageService/Dockerfile")
+    .WithHttpEndpoint(0000, 8888, "git-usage-management")
+    .WithEnvironment("ASPNETCORE_HTTP_PORTS", "8888")
+    .WithEnvironment("AdminPassword", "just_try_it")
+    .WithEnvironment("AdminLogin", "just_try_it")
+    .WithEnvironment("AdminMail", "just_try_it@mail.ru")
+    .WithEnvironment("Gitea:ApiUrl", "http://gitea:3000/api/v1")
+    .WithReference(rabbitmq)
+    .WaitFor(gitea)
+    .WaitFor(rabbitmq)
+    .WithImageTag("dev");;
 
 
 gateway.WithConfiguration(yarp =>
