@@ -51,7 +51,7 @@ var tokenFactory =
         .WithEnvironment("JWTExpireMinutes", "15")
         .WithEnvironment("RefreshExpireDays", "30")
         .WithOtlpExporter()
-        .WithImageTag("dev");;
+        .WithImageTag("dev");
 
 var userContent =
     builder.AddDockerfile("user-content", "..", "GhostCodeBackend.UserContentService/Dockerfile")
@@ -69,7 +69,7 @@ var userContent =
         .WithEnvironment("JWTExpireMinutes", "15")
         .WithEnvironment("RefreshExpireDays", "30")
         .WithOtlpExporter()
-        .WithImageTag("dev");;
+        .WithImageTag("dev");
 
 var postManagemet = 
     builder.AddDockerfile("post-management", "..", "GhostCodeBackend.PostManagement/Dockerfile")
@@ -97,8 +97,22 @@ var gitUsage = builder.AddDockerfile("git-usage-management", "..", "GhostCodeBac
     .WithReference(rabbitmq)
     .WaitFor(gitea)
     .WaitFor(rabbitmq)
-    .WithImageTag("dev");;
+    .WithImageTag("dev");
 
+var notifications = 
+    builder.AddDockerfile("notifications", "..", "GhostCodeBackend.NotificationService/Dockerfile")
+        .WithEnvironment("ASPNETCORE_HTTP_PORTS", "8111")
+        .WaitFor(rabbitmq)
+        .WaitFor(cache)
+        .WithReference(rabbitmq, "rabbitmq")
+        .WithReference(cache, "redis")
+        .WithEnvironment("JWTAudience", "Audience")
+        .WithEnvironment("JWTIssuer", "Issuer")
+        .WithEnvironment("JWTKey", "SUPER_SECRET_256_BIT_KEY_AT_LEAST_32_CHARS")
+        .WithEnvironment("JWTExpireMinutes", "15")
+        .WithEnvironment("RefreshExpireDays", "30")
+        .WithOtlpExporter()
+        .WithImageTag("dev");
 
 gateway.WithConfiguration(yarp =>
 {

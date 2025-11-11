@@ -1,6 +1,0 @@
-@GhostCodeBackend.PromoCodeService_HostAddress = http://localhost:5080
-
-GET {{GhostCodeBackend.PromoCodeService_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

@@ -21,7 +21,15 @@ builder.Services.AddSingleton<IAdminApi, AdminApi>(_ => new AdminApi(new Configu
     BasePath = cfg["Gitea:ApiUrl"],         
     Password   = cfg["AdminPassword"],
     Username = cfg["AdminLogin"],
-    
+    UserAgent = "GhostCodeBackend.GitUsageService"
+}));
+
+builder.Services.AddSingleton<IRepositoryApi, RepositoryApi>(_ => new RepositoryApi(new Configuration()
+{
+    BasePath = cfg["Gitea:ApiUrl"],         
+    Password   = cfg["AdminPassword"],
+    Username = cfg["AdminLogin"],
+    UserAgent = "GhostCodeBackend.GitUsageService"
 }));
 
 Console.WriteLine($"Gitea API URL: {cfg["Gitea:ApiUrl"]}");
