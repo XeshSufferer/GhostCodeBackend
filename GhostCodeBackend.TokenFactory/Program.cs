@@ -60,51 +60,9 @@ builder.Services.AddScoped<IRefreshTokensService, RefreshTokensService>(
 builder.Services.AddScoped<IJwtService, JwtService>();
 
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(opt =>
-    {
-        opt.TokenValidationParameters = new TokenValidationParameters()
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtOpt.Issuer,
-            ValidAudience = jwtOpt.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOpt.Key))
-        };
-    });
-
-
-builder.Services.AddRateLimiter(opt =>
-{
-    opt.AddFixedWindowLimiter("per-ip", config =>
-    {
-        config.PermitLimit   = 5;          // сколько
-        config.Window        = TimeSpan.FromMinutes(1);
-        config.QueueLimit    = 0;           // без очереди – сразу 429
-        config.AutoReplenishment = true;
-    });
-    
-    opt.OnRejected = (ctx, ct) =>
-    {
-        var ip = ctx.HttpContext.Connection.RemoteIpAddress?.ToString();
-        IpBanMiddleware.Ban(ip, TimeSpan.FromHours(3));
-        ctx.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-        return ValueTask.CompletedTask;
-    };
-});
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", builder =>
-    {
-        builder.WithOrigins("http://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
+builder.AddDefaultAuthorization(builder.Configuration);
+builder.AddDefaultRateLimits(5, 60*3);
+builder.AddDefaultCors();
 
 builder.Services.AddOpenApi();
 builder.Services.AddAuthorization();
@@ -122,10 +80,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseAuthentication();
-app.UseAuthorization();
-app.UseRateLimiter();
-app.UseCors("AllowFrontend");
+app.UseDefaultRateLimits();
+app.UseDefaultCors();
+app.UseDefaultAuth();
 app.MapDefaultEndpoints();
 
 await app.Services.GetRequiredService<IRabbitMQService>().InitializeAsync();

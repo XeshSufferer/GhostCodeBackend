@@ -40,72 +40,18 @@ builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 
 
-JwtOptions jwtOpt = 
-    new JwtOptions()
-    {
-        Audience = cfg["JWTAudience"],
-        Issuer = cfg["JWTIssuer"],
-        Key = cfg["JWTKey"],
-        ExpireMinutes = int.Parse(cfg["JWTExpireMinutes"])
-    };
 
-
-builder.Services.AddAuthorization();
-builder.Services.AddAuthentication();
+builder.AddDefaultCors();
+builder.AddDefaultRateLimits(20, 10);
 builder.AddServiceDefaults();
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(opt =>
-    {
-        opt.TokenValidationParameters = new TokenValidationParameters()
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtOpt.Issuer,
-            ValidAudience = jwtOpt.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOpt.Key))
-        };
-    });
-
-builder.Services.AddRateLimiter(opt =>
-{
-    opt.AddFixedWindowLimiter("per-ip", config =>
-    {
-        config.PermitLimit   = 20;          // сколько
-        config.Window        = TimeSpan.FromMinutes(1);
-        config.QueueLimit    = 0;           // без очереди – сразу 429
-        config.AutoReplenishment = true;
-    });
-    
-    opt.OnRejected = (ctx, ct) =>
-    {
-        var ip = ctx.HttpContext.Connection.RemoteIpAddress?.ToString();
-        IpBanMiddleware.Ban(ip, TimeSpan.FromMinutes(5));
-        ctx.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-        return ValueTask.CompletedTask;
-    };
-});
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", builder =>
-    {
-        builder.WithOrigins("http://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
+builder.AddDefaultAuthorization(builder.Configuration);
 
 
 var app = builder.Build();
 
-app.UseMiddleware<IpBanMiddleware>();
-app.UseAuthentication();
-app.UseAuthorization();
-app.UseCors("AllowFrontend");
-app.UseRateLimiter();
+app.UseDefaultCors();
+app.UseDefaultRateLimits();
+app.UseDefaultAuth();
 app.MapDefaultEndpoints();
 
 if (app.Environment.IsDevelopment())

@@ -1,12 +1,19 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ServiceDiscovery;
+using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using Shared.CfgObjects;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -104,6 +111,96 @@ public static class Extensions
             .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
 
         return builder;
+    }
+
+    public static TBuilder AddDefaultCors<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+    {
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowFrontend", builder =>
+            {
+                builder.WithOrigins("http://localhost:5173")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
+        return builder;
+    }
+
+    public static TBuilder AddDefaultRateLimits<TBuilder>(this TBuilder builder, int limit, int banMinutes) where TBuilder : IHostApplicationBuilder
+    {
+        builder.Services.AddRateLimiter(opt =>
+        {
+            opt.AddFixedWindowLimiter("per-ip", config =>
+            {
+                config.PermitLimit   = limit;          // сколько
+                config.Window        = TimeSpan.FromMinutes(1);
+                config.QueueLimit    = 0;           // без очереди – сразу 429
+                config.AutoReplenishment = true;
+            });
+            
+            opt.OnRejected = (ctx, ct) =>
+            {
+                
+                var ip = ctx.HttpContext.Connection.RemoteIpAddress?.ToString();
+                IpBanMiddleware.Ban(ip, TimeSpan.FromMinutes(banMinutes));
+                ctx.HttpContext.Response.StatusCode = 429; // Too many requests
+                return ValueTask.CompletedTask;
+            };
+        });
+        return builder;
+    }
+
+    public static TBuilder AddDefaultAuthorization<TBuilder>(this TBuilder builder, IConfiguration cfg) where TBuilder : IHostApplicationBuilder
+    {
+        
+        JwtOptions jwtOpt = 
+            new JwtOptions()
+            {
+                Audience = cfg["JWTAudience"],
+                Issuer = cfg["JWTIssuer"],
+                Key = cfg["JWTKey"],
+                ExpireMinutes = int.Parse(cfg["JWTExpireMinutes"])
+            };
+        
+        builder.Services.AddAuthorization();
+        builder.Services.AddAuthentication();
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(opt =>
+            {
+                opt.TokenValidationParameters = new TokenValidationParameters()
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtOpt.Issuer,
+                    ValidAudience = jwtOpt.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOpt.Key))
+                };
+            });
+        return builder;
+    }
+
+    public static WebApplication UseDefaultCors(this WebApplication app)
+    {
+        app.UseCors("AllowFrontend");
+        return app;
+    }
+
+    public static WebApplication UseDefaultRateLimits(this WebApplication app)
+    {
+        app.UseRateLimiter();
+        app.UseMiddleware<IpBanMiddleware>();
+        return app;
+    }
+    
+    public static WebApplication UseDefaultAuth(this WebApplication app)
+    {
+        app.UseAuthentication();
+        app.UseAuthorization();
+        return app;
     }
 
     public static WebApplication MapDefaultEndpoints(this WebApplication app)

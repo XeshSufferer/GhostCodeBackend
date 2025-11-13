@@ -34,20 +34,7 @@ JwtOptions jwtOpt =
 
 builder.AddRedisDistributedCache("redis");
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(opt =>
-    {
-        opt.TokenValidationParameters = new TokenValidationParameters()
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtOpt.Issuer,
-            ValidAudience = jwtOpt.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOpt.Key))
-        };
-    });
+builder.AddDefaultAuthorization(builder.Configuration);
 
 
 
@@ -68,49 +55,18 @@ builder.WebHost.ConfigureKestrel(o =>
     o.Limits.MaxRequestBodySize = MAX_CONTENT_SIZE); 
 
 builder.AddServiceDefaults();
-builder.Services.AddAuthorization();
+
 
 builder.AddMinioClient("minio");
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", builder =>
-    {
-        builder.WithOrigins("http://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
-
-
-builder.Services.AddRateLimiter(opt =>
-{
-    opt.AddFixedWindowLimiter("per-ip", config =>
-    {
-        config.PermitLimit   = 3;          // сколько
-        config.Window        = TimeSpan.FromMinutes(1);
-        config.QueueLimit    = 0;           // без очереди – сразу 429
-        config.AutoReplenishment = true;
-    });
-    
-    opt.OnRejected = (ctx, ct) =>
-    {
-        var ip = ctx.HttpContext.Connection.RemoteIpAddress?.ToString();
-        IpBanMiddleware.Ban(ip, TimeSpan.FromMinutes(30));
-        ctx.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-        return ValueTask.CompletedTask;
-    };
-});
+builder.AddDefaultCors();
+builder.AddDefaultRateLimits(3, 30);
 
 var app = builder.Build();
 
-app.UseMiddleware<IpBanMiddleware>();
 app.MapDefaultEndpoints();
-app.UseAuthentication();
-app.UseAuthorization();
-app.UseCors("AllowFrontend");
-app.UseRateLimiter();
+app.UseDefaultRateLimits();
+app.UseDefaultCors();
 
 app.UseSwagger();
 app.UseSwaggerUI();

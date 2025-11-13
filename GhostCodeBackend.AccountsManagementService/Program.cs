@@ -22,36 +22,9 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", builder =>
-    {
-        builder.WithOrigins("http://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
+builder.AddDefaultCors();
 
-builder.Services.AddRateLimiter(opt =>
-{
-    opt.AddFixedWindowLimiter("per-ip", config =>
-    {
-        config.PermitLimit   = 5;          // сколько
-        config.Window        = TimeSpan.FromMinutes(1);
-        config.QueueLimit    = 0;           // без очереди – сразу 429
-        config.AutoReplenishment = true;
-    });
-    
-    opt.OnRejected = (ctx, ct) =>
-    {
-        
-        var ip = ctx.HttpContext.Connection.RemoteIpAddress?.ToString();
-        IpBanMiddleware.Ban(ip, TimeSpan.FromMinutes(10));
-        ctx.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-        return ValueTask.CompletedTask;
-    };
-});
+builder.AddDefaultRateLimits(5, 10);
 
 builder.AddRabbitMQClient("rabbitmq");
 builder.AddRedisDistributedCache("redis");
@@ -89,13 +62,9 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseMiddleware<IpBanMiddleware>();
-
-
-
+app.UseDefaultRateLimits();
 app.MapDefaultEndpoints();
-app.UseRateLimiter();
-app.UseCors("AllowFrontend");
+app.UseDefaultCors();
 
 await app.Services.GetRequiredService<IRabbitMQService>().InitializeAsync();
 await app.Services.GetRequiredService<IRpcConsumer>().InitConsume();
