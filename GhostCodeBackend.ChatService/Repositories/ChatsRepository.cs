@@ -73,4 +73,18 @@ public class ChatsRepository : IChatsRepository
             return Result<Chat>.Failure(e.Message);
         }
     }
+
+    public async Task<Result<List<Chat>>> GetChatsByMember(string memberId)
+    {
+        try
+        {
+            var chats = await _chats.AsQueryable().Where(c => c.MembersIds.Contains(memberId)).ToListAsync();
+            
+            return Result<List<Chat>>.Success(chats);
+        }
+        catch (Exception e)
+        {
+            return Result<List<Chat>>.Failure(e.Message);
+        }
+    }
 }

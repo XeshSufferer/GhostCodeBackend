@@ -8,4 +8,5 @@ public interface IChatsRepository
     Task<Result> TryDeleteChat(string chatId);
     Task<Result<Chat>> TryGetChat(string chatId);
     Task<Result<Chat>> TryUpdateChat(string chatId, Chat chat);
+    Task<Result<List<Chat>>> GetChatsByMember(string memberId);
 }

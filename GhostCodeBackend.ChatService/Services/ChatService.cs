@@ -13,6 +13,34 @@ public class ChatService : IChatService
         _chats = chats;
     }
 
+    public async Task<Result<List<Chat>>> GetChatsByMemberId(string memberId) => await GetChatsById__Internal(memberId);
+
+    public async Task<Result<List<string>>> GetChatsIdsByMemberId(string memberId)
+    {
+        var chats = await GetChatsById__Internal(memberId);
+
+        if (chats.IsSuccess)
+        {
+            var ids = chats.Value.Select(c => c.Id).ToList();
+            return Result<List<string>>.Success(ids);
+        }
+        
+        return Result<List<string>>.Failure(chats.Error);
+    }
+    
+    private async Task<Result<List<Chat>>> GetChatsById__Internal(string memberId)
+    {
+        try
+        {
+            var chat = await _chats.GetChatsByMember(memberId);
+            return chat;
+        }
+        catch (Exception e)
+        {
+            return Result<List<Chat>>.Failure(e.Message);
+        }
+    }
+
     public async Task<Result<Chat>> CreateChat(string aliceId, string bobId)
     {
         try

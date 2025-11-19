@@ -13,7 +13,7 @@ public class MessagingService : IMessagingService
         _messages = messages;
     }
     
-    public async Task<Result> AddMessageToChat(string senderId, string chatId, string replyToId, string message)
+    public async Task<Result<Message>> AddMessageToChat(string senderId, string chatId, string replyToId, string message)
     {
         try
         {
@@ -30,11 +30,11 @@ public class MessagingService : IMessagingService
             };
 
             await _messages.AddMessageAsync(msg);
-            return Result.Success();
+            return Result<Message>.Success(msg);
         }
         catch (Exception e)
         {
-            return Result.Failure(e.Message);
+            return Result<Message>.Failure(e.Message);
         }
     }
 }
