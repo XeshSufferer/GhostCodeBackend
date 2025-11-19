@@ -1,0 +1,6 @@
+@GhostCodeBackend.ChatService_HostAddress = http://localhost:5063
+
+GET {{GhostCodeBackend.ChatService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
