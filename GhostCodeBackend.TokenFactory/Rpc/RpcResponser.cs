@@ -23,13 +23,13 @@ public class RpcResponser : IRpcResponser
             async (message) =>
             {
                 var token = await _refreshTokens.CreateToken(message.Data);
-                message.IsSuccess = token.result;
+                message.IsSuccess = token.IsSuccess;
 
                 Message<string> response = new Message<string>
                 {
                     CorrelationId = message.CorrelationId,
-                    IsSuccess = token.result,
-                    Data = token.token.Token
+                    IsSuccess = token.IsSuccess,
+                    Data = token.Value.Token
                 };
                 
                 await _rabbit.SendMessageAsync<Message<string>>(response, "TokenFactory.CreateRefresh.Output");

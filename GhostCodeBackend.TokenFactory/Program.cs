@@ -22,6 +22,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.AddRabbitMQClient("rabbitmq");
+builder.AddRedisDistributedCache("redis");
 
 builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
 builder.Services.AddSingleton<IRpcResponser, RpcResponser>();
@@ -70,8 +71,6 @@ builder.AddServiceDefaults();
 
 var app = builder.Build();
 
-app.UseMiddleware<IpBanMiddleware>();
-
 app.UseSwagger();
 app.UseSwaggerUI();
 
@@ -97,11 +96,11 @@ app.MapPost("/refresh", async (RefreshRequestDTO req, IJwtService jwtService) =>
 {
     var result = await jwtService.CreateToken(req.Token);
 
-    return result.result
+    return result.IsSuccess
         ? Results.Ok(new
         {
-            newRefresh = result.newRefresh,
-            newJwt = result.newJwt
+            newRefresh = result.Value.RefreshToken,
+            newJwt = result.Value.Token
         }) : Results.BadRequest("invalid refresh token");
 }).RequireRateLimiting("per-ip");
 

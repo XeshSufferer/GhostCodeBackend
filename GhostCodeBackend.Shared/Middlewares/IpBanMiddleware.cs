@@ -1,34 +1,64 @@
-using System.Collections.Concurrent;
+using System.Text;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Distributed;
+
+namespace GhostCodeBackend.Shared.Middlewares;
 
 public sealed class IpBanMiddleware
 {
     private readonly RequestDelegate _next;
-    private static readonly ConcurrentDictionary<string, DateTime> _bans = new();
+    private readonly IDistributedCache _cache;
+    private const string BanKeyPrefix = "ipban:";
 
-    public IpBanMiddleware(RequestDelegate next) => _next = next;
+    public IpBanMiddleware(RequestDelegate next, IDistributedCache cache)
+    {
+        _next = next;
+        _cache = cache;
+    }
 
     public async Task InvokeAsync(HttpContext ctx)
     {
         var ip = ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var banKey = $"{BanKeyPrefix}{ip}";
 
-        if (_bans.TryGetValue(ip, out var bannedUntil))
+        var banValue = await _cache.GetStringAsync(banKey);
+        
+        if (banValue != null)
         {
-            if (DateTime.UtcNow < bannedUntil)
+            // Проверяем, не истек ли бан
+            if (long.TryParse(banValue, out var banUntilTicks))
             {
-                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
-                await ctx.Response.WriteAsync("Banned");
-                return;
+                var banUntil = new DateTime(banUntilTicks, DateTimeKind.Utc);
+                
+                if (DateTime.UtcNow < banUntil)
+                {
+                    ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await ctx.Response.WriteAsync("Banned");
+                    return;
+                }
+                
+                // Бан истек, удаляем
+                await _cache.RemoveAsync(banKey);
             }
-    
-            _bans.TryRemove(ip, out _);
         }
 
         await _next(ctx);
     }
     
-    public static void Ban(string ip, TimeSpan duration) =>
-        _bans.AddOrUpdate(ip,
-            _ => DateTime.UtcNow.Add(duration),
-            (_, _) => DateTime.UtcNow.Add(duration));
+    public static async Task BanAsync(IDistributedCache cache, string? ip, TimeSpan duration)
+    {
+        if (string.IsNullOrWhiteSpace(ip) || ip == "unknown")
+            return;
+
+        var banKey = $"{BanKeyPrefix}{ip}";
+        var banUntil = DateTime.UtcNow.Add(duration);
+        var banValue = banUntil.Ticks.ToString();
+        
+        var options = new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = duration
+        };
+        
+        await cache.SetStringAsync(banKey, banValue, options);
+    }
 }

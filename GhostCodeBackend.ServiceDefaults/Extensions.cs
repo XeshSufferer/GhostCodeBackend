@@ -1,9 +1,11 @@
 using System.Text;
+using GhostCodeBackend.Shared.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -140,13 +142,12 @@ public static class Extensions
                 config.AutoReplenishment = true;
             });
             
-            opt.OnRejected = (ctx, ct) =>
+            opt.OnRejected = async (ctx, ct) =>
             {
-                
                 var ip = ctx.HttpContext.Connection.RemoteIpAddress?.ToString();
-                IpBanMiddleware.Ban(ip, TimeSpan.FromMinutes(banMinutes));
+                var cache = ctx.HttpContext.RequestServices.GetRequiredService<IDistributedCache>();
+                await IpBanMiddleware.BanAsync(cache, ip, TimeSpan.FromMinutes(banMinutes));
                 ctx.HttpContext.Response.StatusCode = 429; // Too many requests
-                return ValueTask.CompletedTask;
             };
         });
         return builder;

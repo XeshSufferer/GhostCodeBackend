@@ -21,14 +21,14 @@ public class JwtService : IJwtService
         _logger = logger;
     }
 
-    public async Task<(bool result, string newJwt, string newRefresh)> CreateToken(string token)
+    public async Task<Result<TokenPair>> CreateToken(string token)
     {
         var validateResult = await _refresher.ValidAndNotExpired(token);
-        _logger.LogInformation("Validated token: {token} | result: {result}", token, validateResult.result);
-        if (!validateResult.result) return (false, "", "");
-        var rotateResult = await _refresher.RotateToken(validateResult.token);
-        _logger.LogInformation("Rotated token: {token} | result: {result} | newToken: {newToken}", token, rotateResult.result, rotateResult.newToken.UserId);
-        if (rotateResult.result)
+        _logger.LogInformation("Validated token: {token} | result: {result}", token, validateResult.IsSuccess);
+        if (!validateResult.IsSuccess) return Result<TokenPair>.Failure(validateResult.Error);
+        var rotateResult = await _refresher.RotateToken(validateResult.Value);
+        _logger.LogInformation("Rotated token: {token} | result: {result} | newToken: {newToken}", token, rotateResult.IsSuccess, rotateResult.Value.UserId);
+        if (rotateResult.IsSuccess)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Key));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -40,17 +40,17 @@ public class JwtService : IJwtService
                 signingCredentials: creds,
                 claims: new[]
                 {
-                    new Claim(ClaimTypes.Name, validateResult.token.UserId),
-                    new Claim(JwtRegisteredClaimNames.Jti, validateResult.token.UserId),
-                    new Claim(ClaimTypes.Role,  validateResult.token.Role.ToString()),
-                    new Claim(JwtRegisteredClaimNames.Sub, validateResult.token.Tier.ToString()),
+                    new Claim(ClaimTypes.Name, validateResult.Value.UserId),
+                    new Claim(JwtRegisteredClaimNames.Jti, validateResult.Value.UserId),
+                    new Claim(ClaimTypes.Role,  validateResult.Value.Role.ToString()),
+                    new Claim(JwtRegisteredClaimNames.Sub, validateResult.Value.Tier.ToString()),
                 }
             );
 
-            return (true, 
-                new JwtSecurityTokenHandler().WriteToken(newjwt), 
-                rotateResult.newToken.Token);
+            var newJwtWrited = new JwtSecurityTokenHandler().WriteToken(newjwt);
+            
+            return Result<TokenPair>.Success(new TokenPair(newJwtWrited, rotateResult.Value.Token));
         }
-        return (false, "", "");
+        return Result<TokenPair>.Failure(rotateResult.Error);
     }
 }

@@ -1,6 +1,8 @@
+using GhostCodeBackend.Shared.Models;
+
 namespace TokenFactory.Services;
 
 public interface IJwtService
 {
-    Task<(bool result, string newJwt, string newRefresh)> CreateToken(string token);
+    Task<Result<TokenPair>> CreateToken(string token);
 }

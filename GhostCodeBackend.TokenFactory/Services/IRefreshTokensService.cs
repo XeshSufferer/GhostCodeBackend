@@ -5,8 +5,8 @@ namespace TokenFactory.Services;
 
 public interface IRefreshTokensService
 {
-    Task<(bool result, RefreshToken? token)> ValidAndNotExpired(string token);
-    Task<(bool result, RefreshToken newToken)> RotateToken(RefreshToken token);
-    Task<bool> KillToken(string token);
-    Task<(bool result, RefreshToken? token)> CreateToken(DataForJWTWrite userData);
+    Task<Result<RefreshToken?>> ValidAndNotExpired(string token);
+    Task<Result<RefreshToken>> RotateToken(RefreshToken token);
+    Task<Result> KillToken(string token);
+    Task<Result<RefreshToken?>> CreateToken(DataForJWTWrite userData);
 }

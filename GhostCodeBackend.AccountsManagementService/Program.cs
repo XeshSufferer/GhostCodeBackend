@@ -6,9 +6,9 @@ using GhostCodeBackend.Shared.Models;
 using GhostCodeBackend.Shared.RPC.MessageBroker;
 using GhostCodeBackend.Shared.RPC.Tracker;
 using GhostCodeBackend.Shared.Сache;
-using GhostCodeBakend.AccountsManagementService.Rpc;
-using GhostCodeBakend.AccountsManagementService.Services;
-using GhostCodeBakend.AccountsManagementService.Utils;
+using GhostCodeBackend.AccountsManagementService.Rpc;
+using GhostCodeBackend.AccountsManagementService.Services;
+using GhostCodeBackend.AccountsManagementService.Utils;
 using Microsoft.AspNetCore.RateLimiting;
 using MongoDB.Driver;
 using OpenTelemetry;
@@ -100,10 +100,10 @@ app.MapPost("/login", async (LoginRequestDTO req, IAccountsService accounts) =>
 {
     var results = await accounts.LoginAsync(req);
     
-    return results.result ? Results.Ok(new
+    return results.IsSuccess ? Results.Ok(new
     {
-        data = results.userData,
-        refreshToken = results.newRefresh
+        data = results.Value.userData,
+        refreshToken = results.Value.newRefresh
     }
     ) :  Results.BadRequest("Login failed");
 }).RequireRateLimiting("per-ip");
@@ -112,9 +112,9 @@ app.MapPost("/recovery", async (AccountRecoveryRequestDTO req, IAccountsService 
 {
     var results = await accounts.PasswordReset(req.Login, req.RecoveryCode, req.NewPassword);
     
-    return results.result ? Results.Ok(new
+    return results.IsSuccess ? Results.Ok(new
     {
-        newRecovery = results.newRecoveryCode,
+        newRecovery = results.Value,
     }) : Results.BadRequest("Password reset failed");
 }).RequireRateLimiting("per-ip");
 
@@ -122,7 +122,7 @@ app.MapGet("/getData/{id}", async (string id, IAccountsService accounts) =>
 {
     var data = await accounts.GetUserdata(id);
     
-    return data.result ? Results.Ok(new { data = data.data }) : Results.BadRequest("User not found");
+    return data.IsSuccess ? Results.Ok(new { data = data.Value }) : Results.BadRequest("User not found");
 });
 
 app.Run();

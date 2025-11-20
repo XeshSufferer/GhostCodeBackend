@@ -4,14 +4,14 @@ namespace GhostCodeBackend.AccountsManagementService.Repositories;
 
 public interface IAccountsRepository
 {
-    Task<(bool, User)> CreateUserAsync(User user, CancellationToken ct = default);
-    Task<User?> GetByIdUserAsync(string id, CancellationToken ct = default);
-    Task<bool> UpdateUserAsync(User user, CancellationToken ct = default);
-    Task<bool> DeleteUserAsync(User user, CancellationToken ct = default);
-    Task<User?> GetByLoginAndPasswordUserAsync(string login, string password, CancellationToken ct = default);
-    Task<bool> DeleteUserAsync(string userid, CancellationToken ct = default);
+    Task<Result<User>> CreateUserAsync(User user, CancellationToken ct = default);
+    Task<Result<User?>> GetByIdUserAsync(string id, CancellationToken ct = default);
+    Task<Result> UpdateUserAsync(User user, CancellationToken ct = default);
+    Task<Result> DeleteUserAsync(User user, CancellationToken ct = default);
+    Task<Result<User?>> GetByLoginAndPasswordUserAsync(string login, string password, CancellationToken ct = default);
+    Task<Result> DeleteUserAsync(string userid, CancellationToken ct = default);
 
-    Task<User?> GetUserByRecoveryCodeAndLogin(string recoveryCode, string login,
+    Task<Result<User?>> GetUserByRecoveryCodeAndLogin(string recoveryCode, string login,
         CancellationToken ct = default);
 
 }

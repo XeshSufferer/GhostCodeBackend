@@ -41,6 +41,11 @@ public class ChatService : IChatService
         }
     }
 
+    public async Task<Result<Chat>> GetChat(string chatId)
+    {
+        return await _chats.TryGetChat(chatId);
+    }
+
     public async Task<Result<Chat>> CreateChat(string aliceId, string bobId)
     {
         try

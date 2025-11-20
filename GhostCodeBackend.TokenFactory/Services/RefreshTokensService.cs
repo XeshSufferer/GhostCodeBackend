@@ -17,20 +17,20 @@ public class RefreshTokensService : IRefreshTokensService
         _daysBeforeExpiryRefresh = daysBeforeExpiryRefresh;
     }
 
-    public async Task<(bool result, RefreshToken? token)> ValidAndNotExpired(string token)
+    public async Task<Result<RefreshToken?>> ValidAndNotExpired(string token)
     {
-        RefreshToken? findedToken = await _refreshRepository.Get(token);
-        if(findedToken == null) return (false, null);
-        if ((DateTime.UtcNow.Date - findedToken.ExpiresAt.Date).TotalDays > _daysBeforeExpiryRefresh)
+        var findedToken = await _refreshRepository.Get(token);
+        if(!findedToken.IsSuccess) return Result<RefreshToken?>.Failure(findedToken.Error);
+        if ((DateTime.UtcNow.Date - findedToken.Value.ExpiresAt.Date).TotalDays > _daysBeforeExpiryRefresh)
         {
-            await _refreshRepository.Delete(findedToken);
-            return (false, null);
+            await _refreshRepository.Delete(findedToken.Value);
+            return Result<RefreshToken?>.Failure("Token is expired");
         }
 
-        return (true, findedToken);
+        return Result<RefreshToken?>.Success(findedToken.Value);
     }
 
-    public async Task<(bool result, RefreshToken newToken)> RotateToken(RefreshToken token)
+    public async Task<Result<RefreshToken>> RotateToken(RefreshToken token)
     {
         
         
@@ -43,15 +43,15 @@ public class RefreshTokensService : IRefreshTokensService
         
         var result = await _refreshRepository.RotateToken(token, newToken);
         
-        return (result, newToken);
+        return result.IsSuccess ? Result<RefreshToken>.Success(newToken) : Result<RefreshToken>.Failure(result.Error);
     }
 
-    public async Task<bool> KillToken(string token)
+    public async Task<Result> KillToken(string token)
     {
         return await _refreshRepository.Delete(token);
     }
 
-    public async Task<(bool result, RefreshToken? token)> CreateToken(DataForJWTWrite userData)
+    public async Task<Result<RefreshToken?>> CreateToken(DataForJWTWrite userData)
     {
         RefreshToken token = new RefreshToken
         {
@@ -64,6 +64,7 @@ public class RefreshTokensService : IRefreshTokensService
         
         var result = await _refreshRepository.Insert(token);
         
-        return (result, result ? token : null);
+        
+        return result.IsSuccess ? Result<RefreshToken?>.Success(token) : Result<RefreshToken?>.Failure(result.Error);
     }
 }

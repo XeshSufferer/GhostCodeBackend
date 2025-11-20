@@ -4,10 +4,10 @@ namespace TokenFactory.Repositories;
 
 public interface IRefreshTokensRepository
 {
-    Task<RefreshToken?> Get(string token);
-    Task<bool> Insert(RefreshToken token);
-    Task<bool> Delete(RefreshToken token);
-    Task<bool> Delete(string token);
-    Task<bool> RotateToken(RefreshToken oldToken, RefreshToken newToken);
-    Task<bool> RotateToken(string oldToken, RefreshToken newToken);
+    Task<Result<RefreshToken?>> Get(string token);
+    Task<Result> Insert(RefreshToken token);
+    Task<Result> Delete(RefreshToken token);
+    Task<Result> Delete(string token);
+    Task<Result> RotateToken(RefreshToken oldToken, RefreshToken newToken);
+    Task<Result> RotateToken(string oldToken, RefreshToken newToken);
 }

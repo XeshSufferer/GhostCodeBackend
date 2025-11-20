@@ -1,4 +1,4 @@
-namespace GhostCodeBakend.AccountsManagementService.Utils;
+namespace GhostCodeBackend.AccountsManagementService.Utils;
 
 public interface IRandomWordGenerator
 {

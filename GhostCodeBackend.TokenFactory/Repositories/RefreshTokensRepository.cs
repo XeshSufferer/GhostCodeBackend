@@ -25,82 +25,98 @@ public class RefreshTokensRepository : IRefreshTokensRepository
         _tokens.Indexes.CreateOne(indexModel);
     }
 
-    public async Task<RefreshToken?> Get(string token)
+    public async Task<Result<RefreshToken?>> Get(string token)
     {
-        return await _tokens.AsQueryable().Where(t => t.Token == token).FirstOrDefaultAsync();
+        try
+        {
+            var foundedToken = await _tokens.AsQueryable().Where(t => t.Token == token).FirstOrDefaultAsync();
+            return token != null ? Result<RefreshToken?>.Success(foundedToken) :  Result<RefreshToken?>.Failure("Token not found");
+        }
+        catch (Exception e)
+        {
+            return Result<RefreshToken?>.Failure(e.Message);
+        }
     }
 
-    public async Task<RefreshToken?> GetByUserId(string userId)
+    public async Task<Result<RefreshToken?>> GetByUserId(string userId)
     {
-        return await _tokens.AsQueryable().Where(t => t.UserId == userId).FirstOrDefaultAsync();
+        try
+        {
+            var token = await _tokens.AsQueryable().Where(t => t.UserId == userId).FirstOrDefaultAsync();
+            return token != null ? Result<RefreshToken?>.Success(token) :  Result<RefreshToken?>.Failure("Token not found");
+        }
+        catch (Exception e)
+        {
+            return Result<RefreshToken?>.Failure(e.Message);
+        }
     }
 
-    public async Task<bool> Insert(RefreshToken token)
+    public async Task<Result> Insert(RefreshToken token)
     {
         try
         {
             var opts = new ReplaceOptions { IsUpsert = true };
             await _tokens.ReplaceOneAsync(u => u.Id == token.Id || token.UserId == u.UserId, token, opts);
-            return true;
+            return Result.Success();
         }
         catch (Exception e)
         {
-            return false;
+            return Result.Failure(e.Message);
         }
     }
 
-    public async Task<bool> Delete(RefreshToken token)
+    public async Task<Result> Delete(RefreshToken token)
     {
         try
         {
-            await _tokens.DeleteOneAsync(t => t.Id == token.Id);
-            return true;
+            var result = await _tokens.DeleteOneAsync(t => t.Id == token.Id);
+            return result.DeletedCount > 0 ? Result.Success() : Result.Failure("Token not found");
         }
         catch (Exception e)
         {
-            return false;
+            return Result.Failure(e.Message);
         }
     }
     
-    public async Task<bool> Delete(string token)
+    public async Task<Result> Delete(string token)
     {
         try
         {
-            await _tokens.DeleteOneAsync(t => t.Token == token);
-            return true;
+            var result = await _tokens.DeleteOneAsync(t => t.Token == token);
+            return result.DeletedCount > 0 ? Result.Success() : Result.Failure("Token not found");
         }
         catch (Exception e)
         {
-            return false;
+            return Result.Failure(e.Message);
         }
     }
 
-    public async Task<bool> RotateToken(RefreshToken oldToken, RefreshToken newToken)
+    public async Task<Result> RotateToken(RefreshToken oldToken, RefreshToken newToken)
     {
 
         try
         {
-            await _tokens.DeleteOneAsync(t => t.Id == oldToken.Id);
+            var deleteResult = await _tokens.DeleteOneAsync(t => t.Id == oldToken.Id);
             await _tokens.InsertOneAsync(newToken);
-            return true;
+            return deleteResult.DeletedCount > 0 ? Result.Success() : Result.Failure("Rotated token not found");
         }
         catch (Exception e)
         {
-            return false;
+            return Result.Failure(e.Message);
         }
     }
     
-    public async Task<bool> RotateToken(string oldToken, RefreshToken newToken)
+    public async Task<Result> RotateToken(string oldToken, RefreshToken newToken)
     {
         try
         {
-            await _tokens.DeleteOneAsync(t => t.Token == oldToken);
+            var deleteResult = await _tokens.DeleteOneAsync(t => t.Token == oldToken);
             await _tokens.InsertOneAsync(newToken);
-            return true;
+            return deleteResult.DeletedCount > 0 ? Result.Success() : Result.Failure("Rotated token not found");
         }
         catch (Exception e)
         {
-            return false;
+            return Result.Failure(e.Message);
         }
     }
 }

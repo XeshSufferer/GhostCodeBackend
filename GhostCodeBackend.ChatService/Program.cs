@@ -1,5 +1,6 @@
 using Cassandra;
 using Cassandra.Mapping;
+using GhostCodeBackend.ChatService.Hubs;
 using GhostCodeBackend.ChatService.Repositories;
 using GhostCodeBackend.ChatService.Services;
 using GhostCodeBackend.Shared.Сache;
@@ -18,6 +19,7 @@ builder.AddDefaultCors();
 builder.AddServiceDefaults();
 
 
+builder.Services.AddScoped<ICacheService, RedisService>();
 builder.Services.AddSingleton<IChatsRepository, ChatsRepository>();
 builder.Services.AddSingleton<IMessagesRepository, MessagesRepository>();
 builder.Services.AddScoped<ICacheService, RedisService>();
@@ -61,5 +63,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.MapHub<ChatHub>("/chat");
 
 app.Run();

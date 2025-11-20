@@ -1,6 +1,6 @@
 using MongoDB.Driver;
 using GhostCodeBackend.Shared.Models;
-using GhostCodeBakend.AccountsManagementService.Utils;
+using GhostCodeBackend.AccountsManagementService.Utils;
 using MongoDB.Driver.Linq;
 
 namespace GhostCodeBackend.AccountsManagementService.Repositories;
@@ -11,11 +11,13 @@ public class AccountsRepository : IAccountsRepository
 
     private readonly IMongoCollection<User> _users;
     private readonly IHasher _hasher;
+    private readonly ILogger<AccountsRepository> _logger;
 
-    public AccountsRepository(IMongoDatabase db, IHasher hasher)
+    public AccountsRepository(IMongoDatabase db, IHasher hasher, ILogger<AccountsRepository> logger)
     {
         _db = db;
         _hasher = hasher;
+        _logger = logger;
         db.CreateCollection("users");
         
         var indexKeys =  Builders<User>.IndexKeys.Ascending(u => u.Login);
@@ -26,94 +28,110 @@ public class AccountsRepository : IAccountsRepository
         _users.Indexes.CreateOne(indexModel);
     }
 
-    public async Task<User?> GetByIdUserAsync(string id, CancellationToken ct = default)
+    public async Task<Result<User?>> GetByIdUserAsync(string id, CancellationToken ct = default)
     {
         try
         {
-            return await _users.AsQueryable().Where(u => u.Id == id).FirstOrDefaultAsync(ct);
+            
+            var user = await _users.AsQueryable().Where(u => u.Id == id).FirstOrDefaultAsync(ct);
+            return user != null ? Result<User?>.Success(user) : Result<User?>.Failure("User not fount");
         }
         catch (Exception e)
         {
-            return null;
+            _logger.LogError(e.Message, "Error by finding user with id {id}", id);
+            return Result<User?>.Failure(e.Message);
         }
     }
 
-    public async Task<(bool, User)> CreateUserAsync(User user, CancellationToken ct = default)
+    public async Task<Result<User>> CreateUserAsync(User user, CancellationToken ct = default)
     {
         try
         {
             await _users.InsertOneAsync(user, ct);
-            return (true, user);
+            return Result<User>.Success(user);
         }
         catch (Exception e)
         {
-            return (false, null);
+            _logger.LogError(e.Message);
+            return Result<User>.Failure(e.Message);
         }
     }
 
-    public async Task<bool> UpdateUserAsync(User user, CancellationToken ct = default)
+    public async Task<Result> UpdateUserAsync(User user, CancellationToken ct = default)
     {
         try
         {
             var existingUser = await _users.Find(u => u.Id == user.Id).FirstOrDefaultAsync(ct);
             if (existingUser == null)
             {
-                return false;
+                return Result.Failure("User not found");
             }
             
             var opts = new ReplaceOptions { IsUpsert = false };
             var result = await _users.ReplaceOneAsync(u => u.Id == user.Id, user, opts, ct);
             
-            return result.IsAcknowledged && result.ModifiedCount > 0;
+            return result.IsAcknowledged && result.ModifiedCount > 0 ? Result.Success() : Result.Failure("User not found");
         }
         catch (Exception e)
         {
-            return false;
+            _logger.LogError(e.Message);
+            return Result.Failure(e.Message);
         }
     }
 
-    public async Task<bool> DeleteUserAsync(User user, CancellationToken ct = default)
+    public async Task<Result> DeleteUserAsync(User user, CancellationToken ct = default)
     {
         try
         {
-            await _users.DeleteOneAsync(u => u.Id == user.Id, ct);
-            return true;
+            var deleteResult = await _users.DeleteOneAsync(u => u.Id == user.Id, ct);
+            return deleteResult.DeletedCount > 0 ? Result.Success() : Result.Failure("User not found");
         }
         catch (Exception e)
         {
-            return false;
+            _logger.LogError(e.Message);
+            return Result.Failure(e.Message);
         }
     }
     
-    public async Task<bool> DeleteUserAsync(string userid, CancellationToken ct = default)
+    public async Task<Result> DeleteUserAsync(string userid, CancellationToken ct = default)
     {
         try
         {
-            await _users.DeleteOneAsync(u => u.Id == userid, ct);
-            return true;
+            var deleteResult = await _users.DeleteOneAsync(u => u.Id == userid, ct);
+            return deleteResult.DeletedCount > 0 ? Result.Success() : Result.Failure("User not found");
         }
         catch (Exception e)
         {
-            return false;
+            _logger.LogError(e.Message);
+            return Result.Failure(e.Message);
         }
     }
 
-    public async Task<User?> GetByLoginAndPasswordUserAsync(string login, string password, CancellationToken ct = default)
+    public async Task<Result<User?>> GetByLoginAndPasswordUserAsync(string login, string password, CancellationToken ct = default)
     {
         var user = await _users.AsQueryable()
             .Where(u => u.Login == login)
             .FirstOrDefaultAsync(ct);
 
         if (user == null || !_hasher.VerifyBcrypt(user.PasswordHash, password))
-            return null;
+            return Result<User?>.Failure("Invalid login or password");
 
-        return user;
+        return Result<User?>.Success(user);
     }
 
-    public async Task<User?> GetUserByRecoveryCodeAndLogin(string recoveryCode, string login,
+    public async Task<Result<User?>> GetUserByRecoveryCodeAndLogin(string recoveryCodeHash, string login,
         CancellationToken ct = default)
     {
-        return await _users.AsQueryable().Where(u => u.Login == login && u.RecoveryCodeHash == recoveryCode).FirstOrDefaultAsync(ct);
+        try
+        {
+            var user = await _users.AsQueryable().Where(u => u.Login == login && u.RecoveryCodeHash == recoveryCodeHash).FirstOrDefaultAsync(ct);
+            return user != null ?  Result<User?>.Success(user) : Result<User?>.Failure("User not found");
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e.Message);
+            return Result<User?>.Failure(e.Message);
+        }
     }
 
 

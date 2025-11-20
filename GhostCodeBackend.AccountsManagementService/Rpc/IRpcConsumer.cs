@@ -1,4 +1,4 @@
-namespace GhostCodeBakend.AccountsManagementService.Rpc;
+namespace GhostCodeBackend.AccountsManagementService.Rpc;
 
 public interface IRpcConsumer
 {

@@ -2,7 +2,7 @@ using GhostCodeBackend.Shared.DTO.Interservice;
 using GhostCodeBackend.Shared.RPC.MessageBroker;
 using GhostCodeBackend.Shared.RPC.Tracker;
 
-namespace GhostCodeBakend.AccountsManagementService.Rpc;
+namespace GhostCodeBackend.AccountsManagementService.Rpc;
 
 public class RpcConsumer : IRpcConsumer
 {

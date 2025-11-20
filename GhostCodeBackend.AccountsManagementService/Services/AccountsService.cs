@@ -6,11 +6,11 @@ using GhostCodeBackend.Shared.Models.Enums;
 using GhostCodeBackend.Shared.RPC.MessageBroker;
 using GhostCodeBackend.Shared.RPC.Tracker;
 using GhostCodeBackend.Shared.Сache;
-using GhostCodeBakend.AccountsManagementService.Utils;
+using GhostCodeBackend.AccountsManagementService.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using MongoDB.Bson;
 
-namespace GhostCodeBakend.AccountsManagementService.Services;
+namespace GhostCodeBackend.AccountsManagementService.Services;
 
 public class AccountsService : IAccountsService
 {
@@ -56,71 +56,73 @@ public class AccountsService : IAccountsService
 
         var result = await _accounts.CreateUserAsync(newUser, ct);
     
-        if(!result.Item1) return (false, null, null,  null);
+        if(!result.IsSuccess) return (false, null, null,  null);
 
         string correlationId = _tracker.CreatePendingRequest();
         Message<DataForJWTWrite> msg = new Message<DataForJWTWrite>
         {
-            Data = new DataForJWTWrite().MapFromDomainUser(result.Item2),  
+            Data = new DataForJWTWrite().MapFromDomainUser(result.Value),  
             CorrelationId = correlationId,
         };
         await _rabbit.SendMessageAsync<Message<DataForJWTWrite>>(msg, "TokenFactory.CreateRefresh.Input");
         Message<string> refreshToken = await _tracker.WaitForResponseAsync<Message<string>>(correlationId);
-        return (result.Item1 && refreshToken.IsSuccess, newUser, recoveryCode, refreshToken.Data);
+        return (result.IsSuccess && refreshToken.IsSuccess, newUser, recoveryCode, refreshToken.Data);
     }
 
-    public async Task<(bool result, UserData userData, string newRefresh)> LoginAsync(LoginRequestDTO req, CancellationToken ct = default)
+    public async Task<Result<(UserData userData, string newRefresh)>> LoginAsync(LoginRequestDTO req, CancellationToken ct = default)
     {
-        User? findedAccount = await _accounts.GetByLoginAndPasswordUserAsync(req.Login, req.Password, ct);
-        if(findedAccount == null) return (false, null, null);
+        var findedAccount = await _accounts.GetByLoginAndPasswordUserAsync(req.Login, req.Password, ct);
+        if(findedAccount.IsSuccess) return Result<(UserData userData, string newRefresh)>.Failure(findedAccount.Error);
         
         string correlationId = _tracker.CreatePendingRequest();
         
         Message<DataForJWTWrite> msg = new Message<DataForJWTWrite>
         {
-            Data = new DataForJWTWrite().MapFromDomainUser(findedAccount),
+            Data = new DataForJWTWrite().MapFromDomainUser(findedAccount.Value),
             CorrelationId = correlationId,
         };
         
         await _rabbit.SendMessageAsync<Message<DataForJWTWrite>>(msg, "TokenFactory.CreateRefresh.Input");
         Message<string> refreshToken = await _tracker.WaitForResponseAsync<Message<string>>(correlationId);
-        return (refreshToken.IsSuccess, new UserData().MapFromDomainUser(findedAccount), refreshToken.Data);
+        return Result<(UserData userData, string newRefresh)>.Success(
+            (new UserData().MapFromDomainUser(findedAccount.Value), refreshToken.Data));
     }
 
-    public async Task<bool> DeleteAsync(string id, CancellationToken ct = default)
+    public async Task<Result> DeleteAsync(string id, CancellationToken ct = default)
     {
         return await _accounts.DeleteUserAsync(id, ct);
     }
 
-    public async Task<(bool result, string newRecoveryCode)> PasswordReset(string login, string recoveryCode, string newPassword, CancellationToken ct = default)
+    public async Task<Result<string>> PasswordReset(string login, string recoveryCode, string newPassword, CancellationToken ct = default)
     {
-        User? user = await _accounts.GetUserByRecoveryCodeAndLogin(_hasher.Sha256(recoveryCode), login, ct);
-        //if(user == null) return (false, null);
+        var user = await _accounts.GetUserByRecoveryCodeAndLogin(_hasher.Sha256(recoveryCode), login, ct);
+        if(user.IsSuccess) return Result<string>.Failure(user.Error);
         
-        user.PasswordHash = _hasher.Bcrypt(newPassword);
+        user.Value.PasswordHash = _hasher.Bcrypt(newPassword);
         
         string newRecoveryCode = _randomWordGenerator.GetRandomWord(20);
         
-        user.RecoveryCodeHash = _hasher.Sha256(newRecoveryCode);
-        bool results = await _accounts.UpdateUserAsync(user);
-        return (results, newRecoveryCode);
+        user.Value.RecoveryCodeHash = _hasher.Sha256(newRecoveryCode);
+        var results = await _accounts.UpdateUserAsync(user.Value);
+        return results.IsSuccess ? Result<string>.Success(newRecoveryCode) : Result<string>.Failure(results.Error);
     }
 
-    public async Task<(bool result, UserData? data)> GetUserdata(string id, CancellationToken ct = default)
+    public async Task<Result<UserData?>> GetUserdata(string id, CancellationToken ct = default)
     {
-        if (await _cache.ExistsAsync($"accountManagement:userdata:{id}"))
+        var cachedData = await _cache.GetAsync<UserData>($"accountManagement:userdata:{id}");
+        if (cachedData != null)
         {
-            return (true, await _cache.GetAsync<UserData>($"accountManagement:userdata:{id}"));
+            return Result<UserData?>.Success(cachedData);
         }
         
-        User? user = await _accounts.GetByIdUserAsync(id, ct);
-        if (user == null) return (false, null);
+        var user = await _accounts.GetByIdUserAsync(id, ct);
+        if (user.IsSuccess) return Result<UserData?>.Failure(user.Error);
 
-        UserData data = new UserData().MapFromDomainUser(user);
+        UserData data = new UserData().MapFromDomainUser(user.Value);
         
         await _cache.SetAsync<UserData>($"accountManagement:userdata:{id}", data, TimeSpan.FromHours(1));
         
         
-        return (true, data);
+        return Result<UserData?>.Success(data);
     }
 }
