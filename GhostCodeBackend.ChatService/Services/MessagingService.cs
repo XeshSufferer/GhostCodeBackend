@@ -15,26 +15,17 @@ public class MessagingService : IMessagingService
     
     public async Task<Result<Message>> AddMessageToChat(string senderId, string chatId, string replyToId, string message)
     {
-        try
+        var msg = new Message
         {
-            
-            var msg = new Message
-            {
-                ChatId = chatId,
-                SenderId = senderId,
-                Text = message,
-                CreatedAt = DateTime.UtcNow,
-                PictureLinks = new List<string>(),
-                Reactions = new List<Reaction>(),
-                ReplyToId = replyToId
-            };
+            ChatId = chatId,
+            SenderId = senderId,
+            Text = message,
+            CreatedAt = DateTime.UtcNow,
+            PictureLinks = new List<string>(),
+            Reactions = new List<Reaction>(),
+            ReplyToId = replyToId
+        };
 
-            await _messages.AddMessageAsync(msg);
-            return Result<Message>.Success(msg);
-        }
-        catch (Exception e)
-        {
-            return Result<Message>.Failure(e.Message);
-        }
+        return await _messages.TryAddMessageAsync(msg);
     }
 }
