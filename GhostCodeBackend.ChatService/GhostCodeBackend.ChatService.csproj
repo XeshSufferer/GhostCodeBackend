@@ -11,6 +11,7 @@
         <PackageReference Include="CassandraCSharpDriver" Version="3.22.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9"/>
         <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.5.1" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.9" />
         <ProjectReference Include="../GhostCodeBackend.ServiceDefaults/GhostCodeBackend.ServiceDefaults.csproj" />
         <ProjectReference Include="../GhostCodeBackend.Shared/GhostCodeBackend.Shared.csproj"/>
     </ItemGroup>
