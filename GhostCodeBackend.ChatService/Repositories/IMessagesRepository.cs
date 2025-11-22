@@ -4,7 +4,7 @@ namespace GhostCodeBackend.ChatService.Repositories;
 
 public interface IMessagesRepository
 {
-    Task<int> GetTotalChunkCountAsync(string chatId);
-    Task AddMessageAsync(Message message);
-    Task<MessageChunk> GetChunkByIndexAsync(string chatId, int index);
+    Task<Result<Message>> TryAddMessageAsync(Message message);
+    Task<Result<MessageChunk>> TryGetChunkByIndexAsync(string chatId, int chunkIndex, int limit = 50);
+    Task<Result<int>> TryGetTotalChunkCountAsync(string chatId);
 }
