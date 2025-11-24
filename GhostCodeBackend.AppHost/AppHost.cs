@@ -6,10 +6,13 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 
 var minio = builder.AddMinioContainer("minio")
-    .WithImageTag("latest");
+    .WithImageTag("latest")
+    .WithContainerName("minio");
 var cache = builder.AddRedis("cache")
-    .WithImageTag("latest");
+    .WithImageTag("latest")
+    .WithContainerName("redis-cache");
 var mongo = builder.AddMongoDB("mongodb", 3363)
+    .WithContainerName("mongodb")
     .AddDatabase("mainMongo", "main");
 
 
@@ -24,8 +27,11 @@ var gitea = builder.AddContainer("gitea", "gitea/gitea:1.22-rootless")
     .WithContainerName("gitea");
 
 
-var gateway = builder.AddYarp("gateway").WithHostPort(8080);
-var rabbitmq = builder.AddRabbitMQ("rabbitmq");
+var gateway = builder.AddYarp("gateway")
+    .WithHostPort(8080)
+    .WithContainerName("gateway");
+var rabbitmq = builder.AddRabbitMQ("rabbitmq")
+    .WithContainerName("rabbitmq");
 
 var scylla = builder.AddContainer("scylla", "scylladb/scylla")
     .WithImageTag("latest")
