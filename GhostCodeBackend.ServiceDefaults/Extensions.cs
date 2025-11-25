@@ -132,7 +132,9 @@ public static class Extensions
 
     public static TBuilder AddDefaultRateLimits<TBuilder>(this TBuilder builder, int limit, int banMinutes) where TBuilder : IHostApplicationBuilder
     {
-        builder.Services.AddRateLimiter(opt =>
+        Console.WriteLine("NO RATE LIMITS");
+        // ONLY FOR TESTS
+        /*builder.Services.AddRateLimiter(opt =>
         {
             opt.AddFixedWindowLimiter("per-ip", config =>
             {
@@ -149,7 +151,7 @@ public static class Extensions
                 await IpBanMiddleware.BanAsync(cache, ip, TimeSpan.FromMinutes(banMinutes));
                 ctx.HttpContext.Response.StatusCode = 429; // Too many requests
             };
-        });
+        });*/
         return builder;
     }
 
@@ -223,3 +225,4 @@ public static class Extensions
         return app;
     }
 }
+
