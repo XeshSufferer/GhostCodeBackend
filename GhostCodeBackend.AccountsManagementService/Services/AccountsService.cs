@@ -72,7 +72,7 @@ public class AccountsService : IAccountsService
     public async Task<Result<(UserData userData, string newRefresh)>> LoginAsync(LoginRequestDTO req, CancellationToken ct = default)
     {
         var findedAccount = await _accounts.GetByLoginAndPasswordUserAsync(req.Login, req.Password, ct);
-        if(findedAccount.IsSuccess) return Result<(UserData userData, string newRefresh)>.Failure(findedAccount.Error);
+        if(!findedAccount.IsSuccess) return Result<(UserData userData, string newRefresh)>.Failure(findedAccount.Error);
         
         string correlationId = _tracker.CreatePendingRequest();
         
