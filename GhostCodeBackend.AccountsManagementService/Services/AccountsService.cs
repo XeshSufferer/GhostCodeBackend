@@ -116,7 +116,7 @@ public class AccountsService : IAccountsService
         }
         
         var user = await _accounts.GetByIdUserAsync(id, ct);
-        if (user.IsSuccess) return Result<UserData?>.Failure(user.Error);
+        if (!user.IsSuccess) return Result<UserData?>.Failure(user.Error);
 
         UserData data = new UserData().MapFromDomainUser(user.Value);
         
