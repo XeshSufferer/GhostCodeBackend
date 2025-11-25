@@ -5,7 +5,8 @@
 ### PostCreationRequestDTO
 ```
 {
-  "content": "string"
+  "title": "string",
+  "body": "string"
 }
 ```
 
