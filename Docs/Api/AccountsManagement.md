@@ -10,7 +10,7 @@ DTO запроса на регистрацию, в JSON выглядит как:
 ```
 
 {
-  "name": "string",
+  "login": "string",
   "password": "string"
 }
 
@@ -25,7 +25,7 @@ DTO запроса на регистрацию, в JSON выглядит так:
 ```
 
 {
-  "name": "string",
+  "login": "string",
   "password": "string"
 }
 
