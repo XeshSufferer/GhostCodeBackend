@@ -109,6 +109,7 @@ var gitUsage = builder.AddDockerfile("git-usage-management", "..", "GhostCodeBac
 
 var notifications = 
     builder.AddDockerfile("notifications", "..", "GhostCodeBackend.NotificationService/Dockerfile")
+        .WithHttpEndpoint(8111, 8111, "notifications")
         .WithPort(8111)
         .WaitFor(rabbitmq)
         .WaitFor(cache)
@@ -120,6 +121,7 @@ var notifications =
         .WithImageTag("dev");
 
 var chats = builder.AddDockerfile("chats", "..", "GhostCodeBackend.ChatService/Dockerfile")
+    .WithHttpEndpoint(8666, 8666, "chats")
     .WithPort(8666)
     .WaitFor(cache)
     .WaitFor(scylla)

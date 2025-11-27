@@ -4,21 +4,21 @@ namespace GhostCodeBackend.PostManagement.Repositories;
 
 public interface IPostsRepository
 {
-    Task<(bool result, List<Post>? posts)> GetLastPostsAsync(int count, CancellationToken ct = default);
-    Task<(bool result, Post? post)> PostAsync(Post post, CancellationToken ct = default);
+    Task<Result<List<Post>>> GetLastPostsAsync(int count, CancellationToken ct = default);
+    Task<Result<Post?>> PostAsync(Post post, CancellationToken ct = default);
 
-    Task<(bool result, List<Comment>? comments)> GetHotPostCommentsAsync(string postId, int count,
+    Task<Result<List<Comment>?>> GetHotPostCommentsAsync(string postId, int count,
         CancellationToken ct = default);
 
-    Task<bool> AddCommentToPostAsync(string postid, Comment comment, CancellationToken ct = default);
-    Task<bool> UpdatePostAsync(string postid, Post post, CancellationToken ct = default);
-    Task<(bool result, Post? post)> GetPostAsync(string postid, CancellationToken ct = default);
+    Task<Result> AddCommentToPostAsync(string postid, Comment comment, CancellationToken ct = default);
+    Task<Result> UpdatePostAsync(string postid, Post post, CancellationToken ct = default);
+    Task<Result<Post?>> GetPostAsync(string postid, CancellationToken ct = default);
 
-    Task<(bool result, List<Comment> comments)> GetCommentChunk(string postId, int chunkIndex,
+    Task<Result<CommentsChunk>> GetCommentChunk(string postId, int chunkIndex,
         CancellationToken ct = default);
 
-    Task<bool> AddCommentsToCold(string postId, int lastChunkIndex, List<Comment> comments);
-    Task<bool> Like(string postid, string likerid, CancellationToken ct = default);
-    Task<bool> AddLikesToCold(string postId, int lastChunkIndex, List<LikeSegment> segments);
-    Task<bool> PostIsLikedByUser(string postId, string userId, CancellationToken ct = default);
+    Task<Result> AddCommentsToCold(string postId, int lastChunkIndex, List<Comment> comments);
+    Task<Result> Like(string postid, string likerid, CancellationToken ct = default);
+    Task<Result> AddLikesToCold(string postId, int lastChunkIndex, List<LikeSegment> segments);
+    Task<Result<bool>> PostIsLikedByUser(string postId, string userId, CancellationToken ct = default);
 }

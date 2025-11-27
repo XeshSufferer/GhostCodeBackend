@@ -17,24 +17,24 @@ public class CommentService : ICommentService
     }
 
 
-    public async Task<bool> WriteComment(string postid, Comment comment, CancellationToken ct = default)
+    public async Task<Result> WriteComment(string postid, Comment comment, CancellationToken ct = default)
     {
         return await _postsRepository.AddCommentToPostAsync(postid, comment, ct);
     }
 
-    public async Task<(bool result, List<Comment> comments)> GetCommentsAsync(string postId, int count, CancellationToken ct = default)
+    public async Task<Result<List<Comment>>> GetCommentsAsync(string postId, int count, CancellationToken ct = default)
     {
         
-        if(count <= 0 || count > 30) return (false, null);
+        if(count <= 0 || count > 30) return Result<List<Comment>>.Failure("Invalid comment count");
         
         var  result = await _postsRepository.GetHotPostCommentsAsync(postId, count, ct);
         
         return result;
     }
 
-    public async Task<(bool result, List<Comment> comments)> GetCommentsByChunkAsync(string postId, int chunkIndex,
+    public async Task<Result<List<Comment>>> GetCommentsByChunkAsync(string postId, int chunkIndex,
         CancellationToken ct = default)
     {
-        return await _postsRepository.GetCommentChunk(postId, chunkIndex);
+        return Result<List<Comment>>.Success((await _postsRepository.GetCommentChunk(postId, chunkIndex)).Value.Comments);
     }
 }

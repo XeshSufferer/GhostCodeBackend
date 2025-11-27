@@ -6,9 +6,9 @@ namespace GhostCodeBackend.PostManagement.Services;
 
 public interface IPostsService
 {
-    Task<(bool result, List<Post?>? posts)> GetPosts(int count, CancellationToken ct = default);
-    Task<(bool result, Post? post)> CreatePost(PostCreationRequestDTO request, ClaimsPrincipal user);
+    Task<Result<List<Post?>>> GetPosts(int count, CancellationToken ct = default);
+    Task<Result<Post>> CreatePost(PostCreationRequestDTO request, ClaimsPrincipal user);
 
-    Task<(bool result, List<Comment> comments)> GetPostCommentsByChunk(string postId, int chunkId,
+    Task<Result<CommentsChunk>> GetPostCommentsByChunk(string postId, int chunkId,
         CancellationToken ct = default);
 }

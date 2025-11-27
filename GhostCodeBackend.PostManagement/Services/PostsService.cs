@@ -18,10 +18,10 @@ public class PostsService : IPostsService
         _posts = posts;
     }
 
-    public async Task<(bool result, Post? post)> CreatePost(PostCreationRequestDTO request, ClaimsPrincipal user)
+    public async Task<Result<Post>> CreatePost(PostCreationRequestDTO request, ClaimsPrincipal user)
     {
-        if(request.Title.Length > _maxCharsInTitle ||  request.Title.Length < 1) return (false, null);
-        if(request.Body.Length > _maxCharsInBody || request.Body.Length < 1) return (false, null);
+        if(request.Title.Length > _maxCharsInTitle ||  request.Title.Length < 1) return Result<Post>.Failure($"Title must be between 1 and {_maxCharsInTitle}");
+        if(request.Body.Length > _maxCharsInBody || request.Body.Length < 1) return Result<Post>.Failure($"Body  must be between 1 and {_maxCharsInBody}");
         
         Post post = new Post
         {
@@ -33,16 +33,16 @@ public class PostsService : IPostsService
         
         var result = await _posts.PostAsync(post);
 
-        return result;
+        return result.IsSuccess ? Result<Post>.Success(post) : Result<Post>.Failure("");
     }
 
-    public async Task<(bool result, List<Post?>? posts)> GetPosts(int count, CancellationToken ct = default)
+    public async Task<Result<List<Post?>>> GetPosts(int count, CancellationToken ct = default)
     {
-        if(count > _maxPostsPerRequest) return (false, null);
+        if(count > _maxPostsPerRequest) return Result<List<Post?>>.Failure($"Max requested post: {_maxPostsPerRequest}");
         return await _posts.GetLastPostsAsync(count);
     }
 
-    public async Task<(bool result, List<Comment> comments)> GetPostCommentsByChunk(string postId, int chunkId, CancellationToken ct = default)
+    public async Task<Result<CommentsChunk>> GetPostCommentsByChunk(string postId, int chunkId, CancellationToken ct = default)
     {
         return await _posts.GetCommentChunk(postId, chunkId, ct);
     }

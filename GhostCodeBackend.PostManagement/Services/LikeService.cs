@@ -1,4 +1,5 @@
 using GhostCodeBackend.PostManagement.Repositories;
+using GhostCodeBackend.Shared.Models;
 
 namespace GhostCodeBackend.PostManagement.Services;
 
@@ -12,7 +13,7 @@ public class LikeService : ILikeService
         _posts = posts;
     }
 
-    public async Task<bool> Like(string postId, string userId, CancellationToken ct = default)
+    public async Task<Result> Like(string postId, string userId, CancellationToken ct = default)
     {
         return await _posts.Like(postId, userId, ct);
     }

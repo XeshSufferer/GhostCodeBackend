@@ -31,21 +31,21 @@ public class ColdLikesRepository : IColdLikesRepository
         
         var post = await _posts.GetPostAsync(postid, ct);
 
-        if (!post.result) return false;
+        if (!post.IsSuccess) return false;
 
-        if (post.post.LikerSegments.AsQueryable().Where(s => s.Id == likerid).Any())
+        if (post.Value.LikerSegments.AsQueryable().Where(s => s.Id == likerid).Any())
         {
             
-            post.post.LikerSegments.Remove(segment);
-            post.post.LikesCount--;
+            post.Value.LikerSegments.Remove(segment);
+            post.Value.LikesCount--;
         }
         else
         {
-            post.post.LikerSegments.Add(segment);
-            post.post.LikesCount++;
+            post.Value.LikerSegments.Add(segment);
+            post.Value.LikesCount++;
         }
-        var updResult = await _posts.UpdatePostAsync(post.post.Id, post.post, ct);
+        var updResult = await _posts.UpdatePostAsync(post.Value.Id, post.Value, ct);
         
-        return updResult;
+        return updResult.IsSuccess;
     }
 }
