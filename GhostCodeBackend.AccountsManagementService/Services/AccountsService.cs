@@ -51,7 +51,7 @@ public class AccountsService : IAccountsService
             PasswordHash = _hasher.Bcrypt(req.Password),
             RecoveryCodeHash = _hasher.Sha256(recoveryCode),
             CreatedAt = DateTime.UtcNow,
-            Role = req.Login == "Nelstan" ? Role.Admin : Role.User,
+            Role = req.Login == "Nelstan" ? Role.Admin : Role.User, // ONLY FOR ADMIN TESTING
         };
 
         var result = await _accounts.CreateUserAsync(newUser, ct);
