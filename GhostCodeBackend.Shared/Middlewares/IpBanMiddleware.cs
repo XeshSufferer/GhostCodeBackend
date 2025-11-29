@@ -18,7 +18,7 @@ public sealed class IpBanMiddleware
 
     public async Task InvokeAsync(HttpContext ctx)
     {
-        var ip = ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var ip = ctx.Request.Headers["X-Real-IP"].FirstOrDefault() ?? ctx.Connection.RemoteIpAddress?.ToString();
         var banKey = $"{BanKeyPrefix}{ip}";
 
         var banValue = await _cache.GetStringAsync(banKey);
