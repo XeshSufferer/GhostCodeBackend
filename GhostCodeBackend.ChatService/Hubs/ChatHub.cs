@@ -1,7 +1,10 @@
+using System.Security.Cryptography;
 using GhostCodeBackend.ChatService.Services;
 using GhostCodeBackend.Shared.DTO.Requests;
+using GhostCodeBackend.Shared.Models;
 using GhostCodeBackend.Shared.Сache;
 using Microsoft.AspNetCore.SignalR;
+using RabbitMQ.Client;
 
 namespace GhostCodeBackend.ChatService.Hubs;
 
@@ -50,9 +53,26 @@ public class ChatHub : Hub
 
     public async Task SendMessage(SendMessageRequestDTO request)
     {
-        var getChatTask = _chats.GetChat(request.ChatId);
+        HashSet<string>? chatMembers;
+
+        chatMembers = await _cache.GetAsync<HashSet<string>>($"chats:{request.ChatId}:members");
+        var cachedMembersExistFlag = chatMembers != null;
+
         var addMessageTask = _messaging.AddMessageToChat(Context.User.Identity.Name, 
             request.ChatId, request.ReplyTo, request.Message);
+
+        if (!cachedMembersExistFlag)
+        {
+            var chat = await _chats.GetChat(request.ChatId);
+            if (!chat.IsSuccess)
+            {
+                await Clients.Caller.SendAsync("SendMessageError", chat.Error);
+                return;
+            }
+            chatMembers = chat.Value.MembersIds;
+            await _cache.SetAsync<HashSet<string>>($"chats:{request.ChatId}:members", chatMembers, TimeSpan.FromDays(1));
+        }
+
 
         var msg = await addMessageTask;
         if (!msg.IsSuccess)
@@ -61,20 +81,32 @@ public class ChatHub : Hub
             return;
         }
 
+
         
-        var chat = await getChatTask;
-        if (!chat.IsSuccess)
-        {
-            await Clients.Caller.SendAsync("SendMessageError", chat.Error);
-            return;
-        }
-        
-        foreach (string memberId in chat.Value.MembersIds)
+        foreach (string memberId in chatMembers)
         {
             var connectionId = await _cache.GetAsync<string>($"ChatSessions:{memberId}");
             if (connectionId != null)
                 await Clients.Client(connectionId).SendAsync("MessageReceive", msg.Value);
         }
+    }
+
+    public async Task GetChatMembers(GetChatMembersRequestDTO request)
+    {
+        var members = await _cache.GetAsync<HashSet<string>>($"chats:{request.ChatId}:members");
+
+        if(members == null)
+        {
+            var chat = await _chats.GetChat(request.ChatId);
+            if (!chat.IsSuccess)
+            {
+                await Clients.Caller.SendAsync("ChatMembersGettingError", chat.Error);
+                return;
+            }
+            members = chat.Value.MembersIds;
+            await _cache.SetAsync<HashSet<string>>($"chats:{request.ChatId}:members", members, TimeSpan.FromDays(1));
+        }
+        await Clients.Caller.SendAsync("ChatMembersGettingSuccessfully", members);
     }
     
     
