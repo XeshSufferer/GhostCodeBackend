@@ -3,6 +3,7 @@ using Cassandra.Mapping;
 using GhostCodeBackend.ChatService.Hubs;
 using GhostCodeBackend.ChatService.Repositories;
 using GhostCodeBackend.ChatService.Services;
+using GhostCodeBackend.Shared.Models;
 using GhostCodeBackend.Shared.Сache;
 using Microsoft.AspNetCore.Session;
 using MongoDB.Driver;
@@ -31,6 +32,12 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
 {
     var client = sp.GetRequiredService<IMongoClient>();
     return client.GetDatabase("main");
+});
+
+builder.Services.AddSingleton<IMongoCollection<Chat>>(sp =>
+{
+    var db = sp.GetRequiredService<IMongoDatabase>();
+    return db.GetCollection<Chat>("chats_metadata");
 });
 
 builder.Services.AddSingleton<Cassandra.ISession>(p =>
