@@ -43,8 +43,8 @@ builder.Services.AddSingleton<IMongoCollection<Chat>>(sp =>
 builder.Services.AddSingleton<Cassandra.ISession>(p =>
 {
     var cluster = Cluster.Builder()
-        .AddContactPoint(builder.Configuration["scylla__host"])
-        .WithPort(int.Parse(builder.Configuration["scylla__port"]))
+        .AddContactPoint("scylladb")
+        .WithPort(8000)
         .Build();
     
     return cluster.Connect("messages");
