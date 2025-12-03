@@ -54,16 +54,19 @@ public class PostsRepository : IPostsRepository
         }
     }
 
-    public async Task<Result<List<Post>>> GetLastPostsAsync(int count, CancellationToken ct = default)
+    public async Task<Result<List<Post>>> GetPostsPagedAsync(int skip, int limit, CancellationToken ct = default)
     {
+
         try
         {
             var posts = await _posts
-                .Find(FilterDefinition<Post>.Empty)
+                .Find(FilterDefinition<Post>.empty)
                 .SortByDescending(p => p.CreatedAt)
-                .Limit(count)
+                .Skip(skip)
+                .Limit(limit)
                 .ToListAsync(ct);
-            return posts != null ? Result<List<Post>>.Success(posts) :  Result<List<Post>>.Failure("Posts not found");
+
+            return Result<List<Post>>.Success(posts);
         }
         catch (Exception e)
         {

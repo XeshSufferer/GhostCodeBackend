@@ -4,7 +4,7 @@ namespace GhostCodeBackend.PostManagement.Repositories;
 
 public interface IPostsRepository
 {
-    Task<Result<List<Post>>> GetLastPostsAsync(int count, CancellationToken ct = default);
+    Task<Result<List<Post>>> GetPostsPagedAsync(int skip, int limit, CancellationToken ct = default);
     Task<Result<Post?>> PostAsync(Post post, CancellationToken ct = default);
 
     Task<Result<List<Comment>?>> GetHotPostCommentsAsync(string postId, int count,

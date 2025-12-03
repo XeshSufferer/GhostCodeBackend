@@ -68,9 +68,9 @@ app.MapPost("/create", async (PostCreationRequestDTO req, IPostsService posts, C
     return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest($"Post creation Failed. Error: {result.Error}");
 }).RequireAuthorization().RequireRateLimiting("per-ip");
 
-app.MapGet("/getPosts/{count}", async (int count, IPostsService posts) =>
+app.MapGet("/getPosts/{from}/{to}", async (int count, int from, IPostsService posts) =>
 {
-    var result = await posts.GetPosts(count);
+    var result = await posts.GetPostsPagedAsync(from, count);
     return result.IsSuccess ? Results.Ok(new { posts = result.Value }) : Results.BadRequest($"Post get Failed. Error: {result.Error}");
 }).RequireAuthorization().RequireRateLimiting("per-ip");
 

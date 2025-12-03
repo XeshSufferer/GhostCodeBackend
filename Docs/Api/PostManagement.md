@@ -50,10 +50,11 @@
 
 ---
 
-### GET /getPosts/{count}
+### GET /getPosts/{from}/{to}
 - **Auth**: Требуется JWT
 - **Rate limit**: 20 запросов/мин
 - **Params**:
+  - `from`: количество постов которое будет пропущено перед выдачей
   - `count`: количество постов к выдаче
 - **200**: `{ "posts": Post[] }`
 - **400**: `Post get Failed`

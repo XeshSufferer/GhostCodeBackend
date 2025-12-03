@@ -38,6 +38,11 @@ public class PostsService : IPostsService
 
     public async Task<Result<List<Post?>>> GetPosts(int count, CancellationToken ct = default)
     {
+        if (limit <= 0)
+            return Result<List<Post>>.Failure("Limit must be greater than zero.");
+        if (skip < 0)
+            return Result<List<Post>>.Failure("Skip must be non-negative.");
+            
         if(count > _maxPostsPerRequest) return Result<List<Post?>>.Failure($"Max requested post: {_maxPostsPerRequest}");
         return await _posts.GetLastPostsAsync(count);
     }
