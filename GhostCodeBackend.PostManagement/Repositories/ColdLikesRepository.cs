@@ -29,7 +29,7 @@ public class ColdLikesRepository : IColdLikesRepository
             CreatedAt = DateTime.UtcNow,
         };
         
-        var post = await _posts.GetPostAsync(postid, ct);
+        var post = await _posts.GetPostByIdAsync(postid, ct);
 
         if (!post.IsSuccess) return false;
 
@@ -44,7 +44,7 @@ public class ColdLikesRepository : IColdLikesRepository
             post.Value.LikerSegments.Add(segment);
             post.Value.LikesCount++;
         }
-        var updResult = await _posts.UpdatePostAsync(post.Value.Id, post.Value, ct);
+        var updResult = await _posts.ReplacePostAsync(post.Value.Id, post.Value, ct);
         
         return updResult.IsSuccess;
     }
