@@ -20,20 +20,21 @@ public class PostsService : IPostsService
 
     public async Task<Result<Post>> CreatePost(PostCreationRequestDTO request, ClaimsPrincipal user)
     {
-        if(request.Title.Length > _maxCharsInTitle ||  request.Title.Length < 1) return Result<Post>.Failure($"Title must be between 1 and {_maxCharsInTitle}");
-        if(request.Body.Length > _maxCharsInBody || request.Body.Length < 1) return Result<Post>.Failure($"Body  must be between 1 and {_maxCharsInBody}");
-        
-        Post post = new Post
+        if (string.IsNullOrWhiteSpace(request.Title) || request.Title.Length > _maxCharsInTitle)
+            return Result<Post>.Failure($"Title must be between 1 and {_maxCharsInTitle} characters.");
+        if (string.IsNullOrWhiteSpace(request.Body) || request.Body.Length > _maxCharsInBody)
+            return Result<Post>.Failure($"Body must be between 1 and {_maxCharsInBody} characters.");
+
+        var post = new Post
         {
-            AuthorId = user.Identity.Name,
+            AuthorId = user.Identity?.Name ?? throw new InvalidOperationException("User identity name is null"),
             Title = request.Title,
             Body = request.Body,
             CreatedAt = DateTime.UtcNow,
         };
-        
-        var result = await _posts.PostAsync(post);
 
-        return result.IsSuccess ? Result<Post>.Success(post) : Result<Post>.Failure("");
+        var result = await _posts.InsertPostAsync(post);
+        return result; // Пробрасываем ошибку из репозитория
     }
 
     public async Task<Result<List<Post?>>> GetPosts(int skip, int limit, CancellationToken ct = default)
@@ -49,6 +50,6 @@ public class PostsService : IPostsService
 
     public async Task<Result<CommentsChunk>> GetPostCommentsByChunk(string postId, int chunkId, CancellationToken ct = default)
     {
-        return await _posts.GetCommentChunk(postId, chunkId, ct);
+        return await _posts.GetCommentsChunkAsync(postId, chunkId, ct);
     }
 }

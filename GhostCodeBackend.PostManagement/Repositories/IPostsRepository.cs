@@ -4,21 +4,12 @@ namespace GhostCodeBackend.PostManagement.Repositories;
 
 public interface IPostsRepository
 {
+    Task<Result<Post>> InsertPostAsync(Post post, CancellationToken ct = default);
+    Task<Result<Post?>> GetPostByIdAsync(string postId, CancellationToken ct = default);
+    Task<Result> ReplacePostAsync(string postId, Post post, CancellationToken ct = default);
     Task<Result<List<Post>>> GetPostsPagedAsync(int skip, int limit, CancellationToken ct = default);
-    Task<Result<Post?>> PostAsync(Post post, CancellationToken ct = default);
-
-    Task<Result<List<Comment>?>> GetHotPostCommentsAsync(string postId, int count,
-        CancellationToken ct = default);
-
-    Task<Result> AddCommentToPostAsync(string postid, Comment comment, CancellationToken ct = default);
-    Task<Result> UpdatePostAsync(string postid, Post post, CancellationToken ct = default);
-    Task<Result<Post?>> GetPostAsync(string postid, CancellationToken ct = default);
-
-    Task<Result<CommentsChunk>> GetCommentChunk(string postId, int chunkIndex,
-        CancellationToken ct = default);
-
-    Task<Result> AddCommentsToCold(string postId, int lastChunkIndex, List<Comment> comments);
-    Task<Result> Like(string postid, string likerid, CancellationToken ct = default);
-    Task<Result> AddLikesToCold(string postId, int lastChunkIndex, List<LikeSegment> segments);
-    Task<Result<bool>> PostIsLikedByUser(string postId, string userId, CancellationToken ct = default);
+    Task<Result> InsertCommentsChunkAsync(CommentsChunk chunk, CancellationToken ct = default);
+    Task<Result<CommentsChunk?>> GetCommentsChunkAsync(string postId, int chunkIndex, CancellationToken ct = default);
+    Task<Result> InsertLikesChunkAsync(LikeChunk chunk, CancellationToken ct = default);
+    Task<Result<List<LikeChunk>>> GetLikesChunksByPostIdAsync(string postId, CancellationToken ct = default);
 }
