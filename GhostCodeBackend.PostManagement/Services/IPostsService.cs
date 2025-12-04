@@ -6,7 +6,7 @@ namespace GhostCodeBackend.PostManagement.Services;
 
 public interface IPostsService
 {
-    Task<Result<List<Post?>>> GetPosts(int count, CancellationToken ct = default);
+    Task<Result<List<Post?>>> GetPosts(int skip, int limit, CancellationToken ct = default);
     Task<Result<Post>> CreatePost(PostCreationRequestDTO request, ClaimsPrincipal user);
 
     Task<Result<CommentsChunk>> GetPostCommentsByChunk(string postId, int chunkId,

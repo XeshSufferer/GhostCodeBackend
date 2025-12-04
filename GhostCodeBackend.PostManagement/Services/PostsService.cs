@@ -36,15 +36,15 @@ public class PostsService : IPostsService
         return result.IsSuccess ? Result<Post>.Success(post) : Result<Post>.Failure("");
     }
 
-    public async Task<Result<List<Post?>>> GetPosts(int count, CancellationToken ct = default)
+    public async Task<Result<List<Post?>>> GetPosts(int skip, int limit, CancellationToken ct = default)
     {
         if (limit <= 0)
             return Result<List<Post>>.Failure("Limit must be greater than zero.");
         if (skip < 0)
             return Result<List<Post>>.Failure("Skip must be non-negative.");
             
-        if(count > _maxPostsPerRequest) return Result<List<Post?>>.Failure($"Max requested post: {_maxPostsPerRequest}");
-        return await _posts.GetLastPostsAsync(count);
+        if(limit > _maxPostsPerRequest) return Result<List<Post?>>.Failure($"Max requested post: {_maxPostsPerRequest}");
+        return await _posts.GetPostsPagedAsync(skip, limit);
     }
 
     public async Task<Result<CommentsChunk>> GetPostCommentsByChunk(string postId, int chunkId, CancellationToken ct = default)

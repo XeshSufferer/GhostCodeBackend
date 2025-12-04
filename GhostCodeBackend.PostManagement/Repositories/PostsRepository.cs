@@ -60,7 +60,7 @@ public class PostsRepository : IPostsRepository
         try
         {
             var posts = await _posts
-                .Find(FilterDefinition<Post>.empty)
+                .Find(FilterDefinition<Post>.Empty)
                 .SortByDescending(p => p.CreatedAt)
                 .Skip(skip)
                 .Limit(limit)
