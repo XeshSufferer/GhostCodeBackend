@@ -6,7 +6,15 @@
 ```
 {
   "title": "string",
-  "body": "string"
+  "body": "string",
+  "tags": [
+    "tag1",
+    "tag2"
+  ],
+  "attachments": [
+    "image_link1",
+    "image_link2"
+  ]
 }
 ```
 

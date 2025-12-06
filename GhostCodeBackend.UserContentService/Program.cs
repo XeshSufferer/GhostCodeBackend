@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using GhostCodeBackend.Shared.Models.Enums;
 using GhostCodeBackend.Shared.Сache;
 using GhostCodeBackend.UserContentService.Helpers;
 using GhostCodeBackend.UserContentService.Repositories;
@@ -50,6 +51,7 @@ builder.Services.AddSingleton<ILiteUserRepository, LiteUserRepository>();
 builder.Services.AddSingleton<IStorage, Storage>();
 builder.Services.AddScoped<ICustomizerService, CustomizerService>();
 builder.Services.AddSingleton<ICacheService, RedisService>();
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 
 builder.WebHost.ConfigureKestrel(o =>
     o.Limits.MaxRequestBodySize = MAX_CONTENT_SIZE); 
@@ -72,7 +74,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 var minio = app.Services.GetRequiredService<IMinioClient>();
-var buckets = new[] { "avatars", "headers" };
+var buckets = new[] { "avatars", "headers", "posts_content", "messages_content" };
 foreach (var b in buckets)
 {
     try
@@ -99,7 +101,13 @@ app.MapGet("link/{bucket}/{*key}", async (
     HttpContext context,   
     IStorage storage) =>
 {
-    await storage.Get(context, bucket.ToLower(), key.ToLower());
+    if (buckets.Contains(bucket))
+    {
+        await storage.Get(context, bucket.ToLower(), key.ToLower());
+        return Results.Ok();
+    }
+    
+    return Results.BadRequest($"Bucket {bucket} not found");
 });
 
 app.MapPost("/uploadHeader", async (IFormFile file, ICustomizerService customizer, ClaimsPrincipal user) =>
@@ -112,6 +120,12 @@ app.MapPost("/uploadAvatar", async (IFormFile file, ICustomizerService customize
 {
     var result = await customizer.SetAvatar(file, user.Identity.Name);
     return result.result ? Results.Ok(new { link = result.filename }) : Results.BadRequest("Error uploading avatar");
+}).DisableAntiforgery().RequireAuthorization().RequireRateLimiting("per-ip");
+
+app.MapPost("/uploadAttachmentForPost", async (IFormFile file, IFileStorageService filestorage) =>
+{
+    var result = await filestorage.UploadFile(file, FileQuality.Normal, "posts_content");
+    return result.IsSuccess ? Results.Ok(new { link = result.Value }) : Results.BadRequest(result.Error);
 }).DisableAntiforgery().RequireAuthorization().RequireRateLimiting("per-ip");
 
 app.Run();
