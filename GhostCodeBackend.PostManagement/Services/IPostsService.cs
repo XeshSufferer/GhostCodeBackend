@@ -11,4 +11,5 @@ public interface IPostsService
 
     Task<Result<CommentsChunk>> GetPostCommentsByChunk(string postId, int chunkId,
         CancellationToken ct = default);
+    Task<Result<Post>> GetPostById(string postId, CancellationToken ct = default);
 }

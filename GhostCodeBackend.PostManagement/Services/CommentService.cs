@@ -25,7 +25,6 @@ public class CommentService : ICommentService
         post.Comments.Add(comment);
         post.CommentsCount++;
 
-        // Если превышен лимит — архивируем
         if (post.Comments.Count > _commentsCacheLimit)
         {
             var chunk = new CommentsChunk

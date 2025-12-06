@@ -52,4 +52,15 @@ public class PostsService : IPostsService
     {
         return await _posts.GetCommentsChunkAsync(postId, chunkId, ct);
     }
+
+    public async Task<Result<Post>> GetPostById(string postId, CancellationToken ct = default)
+    {
+        if(postId == null)
+            return Result<Post>.Failure("Post id is null");
+        
+        if(string.IsNullOrWhiteSpace(postId))
+            return Result<Post>.Failure("Post id is or white space");
+        
+        return await _posts.GetPostByIdAsync(postId, ct);
+    }
 }

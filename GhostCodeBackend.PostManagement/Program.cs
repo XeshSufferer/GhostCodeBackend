@@ -103,4 +103,10 @@ app.MapGet("/getComments/{postid}/chunk/{chunkid}", async (IPostsService posts, 
     return result.IsSuccess ? Results.Ok(result.Value.Comments) : Results.BadRequest($"Post or chunk error: {result.Error}");
 }).RequireAuthorization().RequireRateLimiting("per-ip");
 
+app.MapGet("/getPost/{postid}", async (IPostsService posts, string postid) =>
+{ 
+    var result = await posts.GetPostById(postid);
+    return result.IsSuccess ? Results.Ok(result.Value.Comments) : Results.BadRequest($"Post or chunk error: {result.Error}");
+}).RequireAuthorization().RequireRateLimiting("per-ip");
+
 app.Run();

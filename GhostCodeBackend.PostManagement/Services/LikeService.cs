@@ -20,7 +20,6 @@ public class LikeService : ILikeService
 
         var post = postResult.Value;
 
-        // Проверяем, лайкал ли уже
         bool isLiked = post.LikerSegments.Any(s => s.Id == userId);
         bool isLikedInCold = false;
 
@@ -35,18 +34,15 @@ public class LikeService : ILikeService
 
         if (isLiked || isLikedInCold)
         {
-            // Удаляем лайк
             post.LikerSegments.RemoveAll(s => s.Id == userId);
             post.LikesCount = Math.Max(0, post.LikesCount - 1);
         }
         else
         {
-            // Добавляем лайк
             post.LikerSegments.Add(new LikeSegment { Id = userId, CreatedAt = DateTime.UtcNow });
             post.LikesCount++;
         }
 
-        // Если сегментов стало больше лимита — сливаем в cold storage
         if (post.LikerSegments.Count > _likesCacheLimit)
         {
             var users = post.LikerSegments.Select(s => s.Id).ToArray();
