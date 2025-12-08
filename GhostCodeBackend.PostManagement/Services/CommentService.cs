@@ -49,14 +49,15 @@ public class CommentService : ICommentService
         if(comment == null)
             return Result.Failure("Comment cannot be null");
 
+        var commentResult = await _postsRepository.AddComment(comment);
         var post = await _postsRepository.GetPostById(postId);
 
-        if (post.IsSuccess)
+        if (post.IsSuccess && commentResult.IsSuccess)
         {
             post.Value.CommentsCount++;
             await _postsRepository.UpdatePost(post.Value);
         }
-        
-        return await _postsRepository.AddComment(comment);
+
+        return commentResult;
     }
 }

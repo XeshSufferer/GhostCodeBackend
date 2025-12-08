@@ -47,7 +47,6 @@ public class PostsRepository : IPostsRepository
         try
         {
             var post = await _db.Posts.Where(p => p.Id == id).SingleAsync();
-            await _db.SaveChangesAsync();
             return Result<Post>.Success(post);
         }
         catch (Exception e)
@@ -61,7 +60,7 @@ public class PostsRepository : IPostsRepository
     {
         try
         {
-            var posts = await _db.Posts.Skip(skip).Take(limit).ToListAsync();
+            var posts = await _db.Posts.OrderByDescending(p => p.CreatedAt).Skip(skip).Take(limit).ToListAsync();
             return posts.Count > 0 ? Result<List<Post>>.Success(posts) : Result<List<Post>>.Failure("No posts found");
         }
         catch (Exception e)
@@ -197,6 +196,7 @@ public class PostsRepository : IPostsRepository
         try
         {
             await _db.Likes.AddAsync(like);
+            await _db.SaveChangesAsync();
             return Result.Success();
         }
         catch (Exception e)
