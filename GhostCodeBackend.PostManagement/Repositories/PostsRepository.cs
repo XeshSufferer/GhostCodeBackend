@@ -1,4 +1,4 @@
-﻿using GhostCodeBackend.Shared.Db;
+﻿using GhostCodeBackend.PostManagement.Db;
 using GhostCodeBackend.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 

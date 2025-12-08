@@ -1,7 +1,7 @@
 ﻿using GhostCodeBackend.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace GhostCodeBackend.Shared.Db;
+namespace GhostCodeBackend.PostManagement.Db;
 
 public class PostsDbContext : DbContext
 {

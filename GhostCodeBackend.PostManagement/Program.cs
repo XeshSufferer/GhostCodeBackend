@@ -2,12 +2,13 @@ using System.Security.Claims;
 using System.Text;
 using GhostCodeBackend.PostManagement.Repositories;
 using GhostCodeBackend.PostManagement.Services;
-using GhostCodeBackend.Shared.Db;
+using GhostCodeBackend.PostManagement.Db;
 using GhostCodeBackend.Shared.DTO.Requests;
 using GhostCodeBackend.Shared.Models;
 using GhostCodeBackend.Shared.Сache;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using OpenTelemetry.Metrics;
@@ -54,6 +55,13 @@ app.UseDefaultCors();
 app.UseDefaultRateLimits();
 app.UseDefaultAuth();
 app.MapDefaultEndpoints();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<PostsDbContext>();
+    await db.Database.MigrateAsync();
+}
+
 
 if (app.Environment.IsDevelopment())
 {
