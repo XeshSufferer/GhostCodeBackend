@@ -9,7 +9,7 @@ public interface IPostsService
     Task<Result<List<Post?>>> GetPosts(int skip, int limit, CancellationToken ct = default);
     Task<Result<Post>> CreatePost(PostCreationRequestDTO request, ClaimsPrincipal user);
 
-    Task<Result<CommentsChunk>> GetPostCommentsByChunk(string postId, int chunkId,
+    Task<Result<List<Comment>>> GetPostCommentsByChunk(int postId, int skip, int limit,
         CancellationToken ct = default);
-    Task<Result<Post>> GetPostById(string postId, CancellationToken ct = default);
+    Task<Result<Post>> GetPostById(int postId, CancellationToken ct = default);
 }

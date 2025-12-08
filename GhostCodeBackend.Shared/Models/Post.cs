@@ -5,21 +5,12 @@ namespace GhostCodeBackend.Shared.Models;
 
 public class Post
 {
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; }
-    public string AuthorId { get; set; }
-    public string Title { get; set; }
-    public string Body { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public long CommentsCount { get; set; }
-    public long LikesCount { get; set; }
-    public int CommentsLastChunkIndex { get; set; }
-    public int LikesLastChunkIndex { get; set; }
+    public int Id { get; set; } 
+    public string AuthorId { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Body { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
-    public int CommentChunkedCount { get; set; }
-    public int LikesChunkedCount { get; set; }
-    
-    public List<LikeSegment> LikerSegments { get; set; } = new();
-    public List<Comment> Comments { get; set; } = new();
+    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+    public ICollection<Like> Likes { get; set; } = new List<Like>();
 }

@@ -4,5 +4,5 @@ namespace GhostCodeBackend.PostManagement.Services;
 
 public interface ILikeService
 {
-    Task<Result> Like(string postId, string userId, CancellationToken ct = default);
+    Task<Result> Like(int postId, string userId, CancellationToken ct = default);
 }

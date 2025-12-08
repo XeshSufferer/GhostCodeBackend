@@ -12,60 +12,21 @@ public class LikeService : ILikeService
         _posts = posts;
     }
 
-    public async Task<Result> Like(string postId, string userId, CancellationToken ct = default)
+    public async Task<Result> Like(int postId, string userId, CancellationToken ct = default)
     {
-        var postResult = await _posts.GetPostByIdAsync(postId, ct);
-        if (!postResult.IsSuccess || postResult.Value == null)
-            return Result.Failure("Post not found");
-
-        var post = postResult.Value;
-
-        bool isLiked = post.LikerSegments.Any(s => s.Id == userId);
-        bool isLikedInCold = false;
-
-        if (!isLiked)
+        if (!await _posts.UserIsLikedPost(userId, postId))
         {
-            var coldChunks = await _posts.GetLikesChunksByPostIdAsync(postId, ct);
-            if (coldChunks.IsSuccess)
+            var like = new Like
             {
-                isLikedInCold = coldChunks.Value.Any(chunk => chunk.Users.Contains(userId));
-            }
-        }
-
-        if (isLiked || isLikedInCold)
-        {
-            post.LikerSegments.RemoveAll(s => s.Id == userId);
-            post.LikesCount = Math.Max(0, post.LikesCount - 1);
+                PostId = postId,
+                CreatedAt = DateTime.UtcNow,
+                UserId = userId
+            };
+            return await _posts.AddLike(like);
         }
         else
         {
-            post.LikerSegments.Add(new LikeSegment { Id = userId, CreatedAt = DateTime.UtcNow });
-            post.LikesCount++;
+            return await _posts.DeleteLike(postId, userId);
         }
-
-        if (post.LikerSegments.Count > _likesCacheLimit)
-        {
-            var users = post.LikerSegments.Select(s => s.Id).ToArray();
-            var chunk = new LikeChunk
-            {
-                PostId = postId,
-                ChunkIndex = post.LikesLastChunkIndex,
-                Users = users
-            };
-
-            var insertResult = await _posts.InsertLikesChunkAsync(chunk, ct);
-            if (insertResult.IsSuccess)
-            {
-                post.LikesLastChunkIndex++;
-                post.LikerSegments.Clear();
-            }
-            else
-            {
-                return Result.Failure("Failed to archive likes to cold storage");
-            }
-        }
-
-        var updateResult = await _posts.ReplacePostAsync(postId, post, ct);
-        return updateResult;
     }
 }

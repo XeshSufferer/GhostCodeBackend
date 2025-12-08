@@ -14,6 +14,8 @@ var cache = builder.AddRedis("cache")
 var mongo = builder.AddMongoDB("mongodb", 3363)
     .WithContainerName("mongodb")
     .AddDatabase("mainMongo", "main");
+var postgres = builder.AddPostgres("postgres")
+    .AddDatabase("mainDb");
 
 
 var gitea = builder.AddContainer("gitea", "gitea/gitea:1.22-rootless")
@@ -89,6 +91,7 @@ var postManagemet =
         .WaitFor(cache)
         .WithReference(mongo, "mongodb")
         .WithReference(cache, "redis")
+        .WithReference(postgres, "postgres")
         .WithJwtAuthSettings()
         .WithOtlpExporter()
         .WithContainerName("post-management")

@@ -33,8 +33,8 @@ public class PostsService : IPostsService
             CreatedAt = DateTime.UtcNow,
         };
 
-        var result = await _posts.InsertPostAsync(post);
-        return result; // Пробрасываем ошибку из репозитория
+        var result = await _posts.CreatePost(post);
+        return result.IsSuccess ? Result<Post>.Success(post) : Result<Post>.Failure(result.Error); // Пробрасываем ошибку из репозитория
     }
 
     public async Task<Result<List<Post?>>> GetPosts(int skip, int limit, CancellationToken ct = default)
@@ -45,22 +45,19 @@ public class PostsService : IPostsService
             return Result<List<Post>>.Failure("Skip must be non-negative.");
             
         if(limit > _maxPostsPerRequest) return Result<List<Post?>>.Failure($"Max requested post: {_maxPostsPerRequest}");
-        return await _posts.GetPostsPagedAsync(skip, limit);
+        return await _posts.GetLastPostsInRange(skip, limit);
     }
 
-    public async Task<Result<CommentsChunk>> GetPostCommentsByChunk(string postId, int chunkId, CancellationToken ct = default)
+    public async Task<Result<List<Comment>>> GetPostCommentsByChunk(int postId, int skip, int limit, CancellationToken ct = default)
     {
-        return await _posts.GetCommentsChunkAsync(postId, chunkId, ct);
+        return await _posts.GetCommentsRangeByPostId(postId, skip, limit);
     }
 
-    public async Task<Result<Post>> GetPostById(string postId, CancellationToken ct = default)
+    public async Task<Result<Post>> GetPostById(int postId, CancellationToken ct = default)
     {
         if(postId == null)
             return Result<Post>.Failure("Post id is null");
         
-        if(string.IsNullOrWhiteSpace(postId))
-            return Result<Post>.Failure("Post id is or white space");
-        
-        return await _posts.GetPostByIdAsync(postId, ct);
+        return await _posts.GetPostById(postId);
     }
 }

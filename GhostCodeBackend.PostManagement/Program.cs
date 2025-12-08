@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text;
 using GhostCodeBackend.PostManagement.Repositories;
 using GhostCodeBackend.PostManagement.Services;
+using GhostCodeBackend.Shared.Db;
 using GhostCodeBackend.Shared.DTO.Requests;
 using GhostCodeBackend.Shared.Models;
 using GhostCodeBackend.Shared.Сache;
@@ -24,6 +25,8 @@ var cfg = builder.Configuration;
 
 builder.AddRedisDistributedCache("redis");
 
+builder.AddNpgsqlDbContext<PostsDbContext>("postgres");
+
 builder.Services.AddSingleton<ICacheService, RedisService>();
 builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(cfg.GetConnectionString("mongodb")));
 builder.Services.AddSingleton<IMongoDatabase>(sp =>
@@ -34,8 +37,6 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
 
 builder.Services.AddSingleton<IPostsRepository, PostsRepository>();
 builder.Services.AddScoped<IPostsService, PostsService>();
-builder.Services.AddSingleton<IColdCommentsRepository, ColdCommentsRepository>();
-builder.Services.AddSingleton<IColdLikesRepository, ColdLikesRepository>();
 builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 
@@ -89,6 +90,7 @@ app.MapPost("/commentPost", async (ClaimsPrincipal user, CommentPostRequestDTO r
         AuthorId = user.Identity.Name,
         Content = req.Content,
         CreatedAt = DateTime.UtcNow,
+        PostId = req.PostId
     };
     
     var result = await commentService.WriteComment(req.PostId, comment);
@@ -96,16 +98,19 @@ app.MapPost("/commentPost", async (ClaimsPrincipal user, CommentPostRequestDTO r
     return result.IsSuccess ? Results.Ok() : Results.BadRequest($"Comment Failed. Error: {result.Error}");
 }).RequireAuthorization().RequireRateLimiting("per-ip");
 
-app.MapGet("/getComments/{postid}/chunk/{chunkid}", async (IPostsService posts, string postid, string chunkid) =>
+app.MapGet("/getComments/{postid}/{skip}/{limit}", async (IPostsService posts, string postid, string skip, string limit) =>
 {
-    if(!int.TryParse(chunkid, out int parsedChunkId)) return Results.BadRequest("Chunk ID is invalid");
-    var result = await posts.GetPostCommentsByChunk(postid, parsedChunkId);
-    return result.IsSuccess ? Results.Ok(result.Value.Comments) : Results.BadRequest($"Post or chunk error: {result.Error}");
+    if(!int.TryParse(postid, out int parsedPostId)) return Results.BadRequest("Chunk ID is invalid");
+    if(!int.TryParse(limit, out int parsedLimit)) return Results.BadRequest("Chunk ID is invalid");
+    if(!int.TryParse(skip, out int parsedSkip)) return Results.BadRequest("Chunk ID is invalid");
+    var result = await posts.GetPostCommentsByChunk(parsedPostId, parsedPostId, parsedLimit);
+    return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest($"Post or chunk error: {result.Error}");
 }).RequireAuthorization().RequireRateLimiting("per-ip");
 
 app.MapGet("/getPost/{postid}", async (IPostsService posts, string postid) =>
 { 
-    var result = await posts.GetPostById(postid);
+    if(!int.TryParse(postid, out int parsedPostId)) return Results.BadRequest("Chunk ID is invalid");
+    var result = await posts.GetPostById(parsedPostId);
     return result.IsSuccess ? Results.Ok(result.Value.Comments) : Results.BadRequest($"Post or chunk error: {result.Error}");
 }).RequireAuthorization().RequireRateLimiting("per-ip");
 

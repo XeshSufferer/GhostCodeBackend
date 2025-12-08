@@ -1,155 +1,199 @@
+﻿using GhostCodeBackend.Shared.Db;
 using GhostCodeBackend.Shared.Models;
-using MongoDB.Driver;
+using Microsoft.EntityFrameworkCore;
 
 namespace GhostCodeBackend.PostManagement.Repositories;
 
 public class PostsRepository : IPostsRepository
 {
-    private readonly IMongoCollection<Post> _posts;
-    private readonly IMongoCollection<LikeChunk> _coldLikes;
-    private readonly IMongoCollection<CommentsChunk> _coldComments;
+    
+    private readonly PostsDbContext _db;
     private readonly ILogger<PostsRepository> _logger;
 
-    public PostsRepository(IMongoDatabase db, ILogger<PostsRepository> logger)
+    public PostsRepository(PostsDbContext db, ILogger<PostsRepository> logger)
     {
+        _db = db;
         _logger = logger;
-        _posts = db.GetCollection<Post>("posts");
-        _coldLikes = db.GetCollection<LikeChunk>("cold_likes");
-        _coldComments = db.GetCollection<CommentsChunk>("cold_comments");
-
-        // Индексы (можно вынести в миграции, но оставим тут)
-        _coldLikes.Indexes.CreateOne(
-            Builders<LikeChunk>.IndexKeys.Ascending(x => x.PostId), 
-            new CreateIndexOptions { Unique = false });
-
-        _coldComments.Indexes.CreateOne(
-            Builders<CommentsChunk>.IndexKeys.Ascending(x => x.PostId), 
-            new CreateIndexOptions { Unique = false });
     }
 
-    // --- POSTS ---
-    public async Task<Result<Post>> InsertPostAsync(Post post, CancellationToken ct = default)
+    public async Task<Result<Post>> GetPostById(int id)
     {
         try
         {
-            await _posts.InsertOneAsync(post, cancellationToken: ct);
+            var post = await _db.Posts.Where(p => p.Id == id).SingleAsync();
+            await _db.SaveChangesAsync();
             return Result<Post>.Success(post);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to insert post");
+            _logger.LogError(e, e.Message);
             return Result<Post>.Failure(e.Message);
         }
     }
 
-    public async Task<Result<Post?>> GetPostByIdAsync(string postId, CancellationToken ct = default)
+    public async Task<Result<List<Post>>> GetLastPostsInRange(int skip, int limit)
     {
         try
         {
-            var post = await _posts.Find(p => p.Id == postId).FirstOrDefaultAsync(ct);
-            return Result<Post?>.Success(post);
+            var posts = await _db.Posts.Skip(skip).Take(limit).ToListAsync();
+            return posts.Count > 0 ? Result<List<Post>>.Success(posts) : Result<List<Post>>.Failure("No posts found");
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to get post by ID: {PostId}", postId);
-            return Result<Post?>.Failure(e.Message);
-        }
-    }
-
-    public async Task<Result> ReplacePostAsync(string postId, Post post, CancellationToken ct = default)
-    {
-        try
-        {
-            var result = await _posts.ReplaceOneAsync(p => p.Id == postId, post, cancellationToken: ct);
-            return result.ModifiedCount > 0 
-                ? Result.Success() 
-                : Result.Failure("Post not found");
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to replace post: {PostId}", postId);
-            return Result.Failure(e.Message);
-        }
-    }
-
-    public async Task<Result<List<Post>>> GetPostsPagedAsync(int skip, int limit, CancellationToken ct = default)
-    {
-        try
-        {
-            var posts = await _posts
-                .Find(_ => true)
-                .SortByDescending(p => p.CreatedAt)
-                .Skip(skip)
-                .Limit(limit)
-                .ToListAsync(ct);
-            return Result<List<Post>>.Success(posts);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to get paged posts");
+            _logger.LogError(e, e.Message);
             return Result<List<Post>>.Failure(e.Message);
         }
     }
 
-    // --- COLD COMMENTS ---
-    public async Task<Result> InsertCommentsChunkAsync(CommentsChunk chunk, CancellationToken ct = default)
+    public async Task<Result> CreatePost(Post post)
     {
         try
         {
-            await _coldComments.InsertOneAsync(chunk, ct);
+            await _db.Posts.AddAsync(post);
+            await _db.SaveChangesAsync();
             return Result.Success();
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to insert comments chunk");
+            _logger.LogError(e, e.Message);
             return Result.Failure(e.Message);
         }
     }
 
-    public async Task<Result<CommentsChunk?>> GetCommentsChunkAsync(string postId, int chunkIndex, CancellationToken ct = default)
+    public async Task<Result> UpdatePost(Post post)
     {
         try
         {
-            var chunk = await _coldComments
-                .Find(c => c.PostId == postId && c.ChunkIndex == chunkIndex)
-                .FirstOrDefaultAsync(ct);
-            return Result<CommentsChunk?>.Success(chunk);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to get comments chunk for post {PostId}, chunk {Index}", postId, chunkIndex);
-            return Result<CommentsChunk?>.Failure(e.Message);
-        }
-    }
-
-    // --- COLD LIKES ---
-    public async Task<Result> InsertLikesChunkAsync(LikeChunk chunk, CancellationToken ct = default)
-    {
-        try
-        {
-            await _coldLikes.InsertOneAsync(chunk, ct);
+            _db.Posts.Update(post);
+            await _db.SaveChangesAsync();
             return Result.Success();
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to insert likes chunk");
+            _logger.LogError(e, e.Message);
             return Result.Failure(e.Message);
         }
     }
 
-    public async Task<Result<List<LikeChunk>>> GetLikesChunksByPostIdAsync(string postId, CancellationToken ct = default)
+    public async Task<Result<List<Comment>>> GetCommentsRangeByPostId(int postId, int skip, int limit)
     {
         try
         {
-            var chunks = await _coldLikes
-                .Find(l => l.PostId == postId)
-                .ToListAsync(ct);
-            return Result<List<LikeChunk>>.Success(chunks);
+            var comments = await _db.Comments.Where(p => p.PostId == postId)
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip(skip)
+                .Take(limit)
+                .ToListAsync();
+
+            return Result<List<Comment>>.Success(comments);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to get likes chunks for post {PostId}", postId);
-            return Result<List<LikeChunk>>.Failure(e.Message);
+            _logger.LogError(e, e.Message);
+            return Result<List<Comment>>.Failure(e.Message);
         }
     }
+
+    public async Task<Result> AddComment(Comment comment)
+    {
+        try
+        {
+            await _db.AddAsync(comment);
+            await _db.SaveChangesAsync();
+            return Result.Success();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, e.Message);
+            return Result.Failure(e.Message);
+        }
+    }
+
+    public async Task<Result> DeleteComment(Comment comment)
+    {
+        try
+        {
+            _db.Comments.Remove(comment);
+            await _db.SaveChangesAsync();
+            return Result.Success();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, e.Message);
+            return Result.Failure(e.Message);
+        }
+    }
+
+    public async Task<Result> ChangeCommentById(int commentId, Comment comment)
+    {
+        try
+        {
+            _db.Comments.Update(comment);
+            await _db.SaveChangesAsync();
+            return Result.Success();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, e.Message);
+            return Result.Failure(e.Message);
+        }
+    }
+
+    public async Task<Result<Comment>> GetCommentById(int commentId)
+    {
+        try
+        {
+            var result = await _db.Comments.Where(c => c.Id == commentId).SingleOrDefaultAsync();
+            return Result<Comment>.Success(result);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, e.Message);
+            return Result<Comment>.Failure(e.Message);
+        }
+    }
+
+    public async Task<bool> UserIsLikedPost(string userId, int postId)
+    {
+        try
+        {
+            return await _db.Likes.AnyAsync(l => l.UserId == userId && l.PostId == postId);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, e.Message);
+            return false;
+        }
+    }
+
+    public async Task<Result> AddLike(Like like)
+    {
+        try
+        {
+            await _db.Likes.AddAsync(like);
+            return Result.Success();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, e.Message);
+            return Result.Failure(e.Message);
+        }
+    }
+
+    public async Task<Result> DeleteLike(int postId, string userId)
+    {
+        try
+        {
+            var like = await _db.Likes.Where(l => l.PostId == postId && l.UserId == userId).SingleOrDefaultAsync();
+            _db.Likes.Remove(like);
+            await _db.SaveChangesAsync();
+            return Result.Success();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, e.Message);
+            return Result.Failure(e.Message);
+        }
+    }
+    
 }
