@@ -4,6 +4,8 @@ namespace GhostCodeBackend.PostManagement.Repositories;
 
 public interface IPostsRepository
 {
+    Task<Result<bool>> PostExist(int postId);
+    Task<Result<bool>> CommentExist(int commentId);
     Task<Result<Comment>> GetCommentById(int commentId);
     Task<Result<Post>> GetPostById(int id);
     

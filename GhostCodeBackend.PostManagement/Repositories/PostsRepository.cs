@@ -16,6 +16,32 @@ public class PostsRepository : IPostsRepository
         _logger = logger;
     }
 
+    public async Task<Result<bool>> PostExist(int postId)
+    {
+        try
+        {
+            return Result<bool>.Success(await _db.Posts.AnyAsync(p => p.Id == postId));
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, e.Message);
+            return Result<bool>.Failure(e.Message);
+        }
+    }
+
+    public async Task<Result<bool>> CommentExist(int commentId)
+    {
+        try
+        {
+            return Result<bool>.Success(await _db.Comments.AnyAsync(p => p.Id == commentId));
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, e.Message);
+            return Result<bool>.Failure(e.Message);
+        }
+    }
+    
     public async Task<Result<Post>> GetPostById(int id)
     {
         try

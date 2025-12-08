@@ -14,6 +14,11 @@ public class LikeService : ILikeService
 
     public async Task<Result> Like(int postId, string userId, CancellationToken ct = default)
     {
+        
+        
+        if(!(await _posts.PostExist(postId)).Value || postId <= 0)
+            return Result.Failure("Post not exist");
+        
         if (!await _posts.UserIsLikedPost(userId, postId))
         {
             var like = new Like

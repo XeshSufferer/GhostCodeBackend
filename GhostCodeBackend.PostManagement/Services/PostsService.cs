@@ -50,6 +50,9 @@ public class PostsService : IPostsService
 
     public async Task<Result<List<Comment>>> GetPostCommentsByChunk(int postId, int skip, int limit, CancellationToken ct = default)
     {
+        if(!(await _posts.PostExist(postId)).Value || postId <= 0)
+            return Result<List<Comment>>.Failure("Post not exist");
+        
         return await _posts.GetCommentsRangeByPostId(postId, skip, limit);
     }
 
@@ -57,6 +60,9 @@ public class PostsService : IPostsService
     {
         if(postId == null)
             return Result<Post>.Failure("Post id is null");
+     
+        if(!(await _posts.PostExist(postId)).Value || postId <= 0)
+            return Result<Post>.Failure("Post not exist");
         
         return await _posts.GetPostById(postId);
     }

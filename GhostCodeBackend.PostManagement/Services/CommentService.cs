@@ -17,6 +17,10 @@ public class CommentService : ICommentService
 
     public async Task<Result<List<Comment>>> GetCommentsRange(int postId, int skip, int limit)
     {
+        
+        if(!(await _postsRepository.PostExist(postId)).Value || postId <= 0)
+            return Result<List<Comment>>.Failure("Post not exist");
+        
         if(limit > _commentsLimit)
             return Result<List<Comment>>.Failure("Comments limit exceeded");
         
@@ -35,6 +39,9 @@ public class CommentService : ICommentService
 
     public async Task<Result> WriteComment(int postId, Comment comment, CancellationToken ct = default)
     {
+        if(!(await _postsRepository.PostExist(postId)).Value || postId <= 0)
+            return Result.Failure("Post not exist");
+        
         if(comment == null)
             return Result.Failure("Comment cannot be null");
         
