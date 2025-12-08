@@ -29,6 +29,10 @@ public class CommentService : ICommentService
 
     public async Task<Result> ChangeComment(string userId, int commentId, Comment comment)
     {
+        
+        if(!(await _postsRepository.CommentExist(commentId)).Value || commentId <= 0)
+            return Result.Failure("Comment does not exist");
+        
         var commentGettingResult = await _postsRepository.GetCommentById(commentId);
 
         if (userId != commentGettingResult.Value.AuthorId)
@@ -44,6 +48,14 @@ public class CommentService : ICommentService
         
         if(comment == null)
             return Result.Failure("Comment cannot be null");
+
+        var post = await _postsRepository.GetPostById(postId);
+
+        if (post.IsSuccess)
+        {
+            post.Value.CommentsCount++;
+            await _postsRepository.UpdatePost(post.Value);
+        }
         
         return await _postsRepository.AddComment(comment);
     }

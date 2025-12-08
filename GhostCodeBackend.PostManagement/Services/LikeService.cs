@@ -14,10 +14,10 @@ public class LikeService : ILikeService
 
     public async Task<Result> Like(int postId, string userId, CancellationToken ct = default)
     {
-        
-        
         if(!(await _posts.PostExist(postId)).Value || postId <= 0)
             return Result.Failure("Post not exist");
+
+        var post = await _posts.GetPostById(postId);
         
         if (!await _posts.UserIsLikedPost(userId, postId))
         {
@@ -27,11 +27,26 @@ public class LikeService : ILikeService
                 CreatedAt = DateTime.UtcNow,
                 UserId = userId
             };
-            return await _posts.AddLike(like);
+            var result = await _posts.AddLike(like);
+            if (result.IsSuccess)
+            {
+                post.Value.LikesCount++;
+                await _posts.UpdatePost(post.Value);
+            }
+            return result;
         }
         else
         {
-            return await _posts.DeleteLike(postId, userId);
+            var result = await _posts.DeleteLike(postId, userId);
+            if (result.IsSuccess)
+            {
+                post.Value.LikesCount--;
+                await _posts.UpdatePost(post.Value);
+            }
+
+            return result;
         }
+
+        
     }
 }
